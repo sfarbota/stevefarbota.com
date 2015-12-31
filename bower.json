@@ -1,0 +1,27 @@
+{
+  "name": "stevefarbota.com",
+  "description": "All of the code, markup, scripts, styles, etc. that make up stevefarbota.com.",
+  "main": "index.html",
+  "moduleType": [],
+  "keywords": [
+    "Steve",
+    "Farbota",
+    "Website"
+  ],
+  "authors": [
+    "Steve Farbota"
+  ],
+  "license": "MIT",
+  "homepage": "http://www.stevefarbota.com",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "foundation-sites": "~6.0.4"
+  }
+}
