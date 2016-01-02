@@ -1,0 +1,94 @@
+<!doctype html>
+<!--[if IE 9]><html class="lt-ie10" lang="en" > <![endif]-->
+<html class="no-js" lang="en" data-useragent="Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; Trident/6.0)">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Steve Farbota | Developer</title>
+  <meta name="description" content="Documentation and reference library for ZURB Foundation. JavaScript, CSS, components, grid and more." />
+  <meta name="author" content="ZURB, inc. ZURB network also includes zurb.com" />
+  <meta name="copyright" content="ZURB, inc. Copyright (c) 2015" />
+  <link rel="stylesheet" href="/css/gears.css" />
+  <link rel="stylesheet" href="/css/foundation.css" />
+  <link href="keyframes.css">
+  <link href="pageTransitions.css">
+  <link rel="stylesheet" href="/css/stevefarbota.css" />
+  <style>
+    .is-loading,
+    .is-loading a {
+      cursor: progress;
+    }
+  </style>
+  <script src="/js/vendor/modernizr.js"></script>
+</head>
+
+<body>
+  <div id="main" class="m-scene">
+    <div id="main-sidebar" class="large-2 columns">
+
+      <div>
+        <a href="http://www.stevefarbota.com">
+          <h1>Steve Farbota</h1>
+        </a>
+      </div>
+
+      <ul class="side-nav">
+        <li>
+          <a href="/">About</a>
+        </li>
+        <li>
+          <a href="/playground.html">Playground</a>
+        </li>
+        <li>
+          <a href="#">Contact</a>
+        </li>
+      </ul>
+
+    </div>
+
+    <div id="main-content-wrapper" class="large-10 columns">
+
+      <div id="main-content" class="row scene_element scene_element--fadein">
+        <div class="can-explode">
+          <h3>About</h3>
+          <p>Flexible web application developer, creative and logical thinker, and passionate techie.  Experience as a freelance developer as well as a quality assurance analyst/developer in a corporate environment.</p>
+          <a href="/playground.html" id="explore-playground" class="small radius button">Explore Playground</a>
+        </div>
+      </div>
+
+      <footer id="main-footer" class="row">
+        <div class="large-12 columns">
+          <hr/>
+          <div>
+            <div class="large-6 columns">
+              <p>&copy; Copyright 2015 Steve Farbota</p>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+    </div>
+  </div>
+
+  <script src="/js/vendor/jquery.js"></script>
+  <script src="/js/foundation/foundation.js"></script>
+  <script src="/js/greensock-js/uncompressed/TweenMax.js"></script>
+  <script src="/js/greensock-js/uncompressed/TimelineMax.js"></script>
+  <script src="/js/greensock-js/uncompressed/plugins/CSSPlugin.js"></script>
+  <script src="/js/greensock-js/uncompressed/easing/EasePack.js"></script>
+  <script src="/js/smoothState.js-master/src/jquery.smoothState.js"></script>
+  <script src="/js/smoothState.js-master/demos/barebones/functions.js"></script>
+  <script>
+    $(document).foundation();
+
+    var doc = document.documentElement;
+    doc.setAttribute('data-useragent', navigator.userAgent);
+
+    $('#explore-playground').click(function() {
+      $('.can-explode').addClass('explode');
+    });
+  </script>
+</body>
+
+</html>
