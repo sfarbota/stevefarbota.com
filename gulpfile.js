@@ -25,7 +25,7 @@ gulp.task('watch', ['sass'], function () {
 });
 
 gulp.task('useref', function() {
-  return gulp.src('src/*.html')
+  return gulp.src('src/**/*.html')
     .pipe(useref())
     .pipe(gulpif('*.js', uglify()))
     .pipe(gulpif('*.css', minifyCss()))
@@ -33,24 +33,36 @@ gulp.task('useref', function() {
 });
 
 gulp.task('copy-css-references', function() {
-	return gulp.src('./src/*.html')
+	return gulp.src('src/**/*.html')
 		.pipe(htmlSrc({ presets: 'css' }))
 		.pipe(flatten())
 		.pipe(gulp.dest('dist/css'));
 });
 
 gulp.task('copy-js-references', function() {
-	return gulp.src('src/*.html')
+	return gulp.src('src/**/*.html')
 		.pipe(htmlSrc({ presets: 'script'}))
 		.pipe(flatten())
 		.pipe(gulp.dest('dist/js'));
 });
 
 gulp.task('copy-modified-html-files', function() {
-  return gulp.src('src/*.html')
+  return gulp.src('src/**/*.html')
     .pipe(replace(/..\/bower_components\/.*\/(.*\.js)/g, 'js/$1'))
     .pipe(replace(/..\/bower_components\/.*\/(.*\.css)/g, 'css/$1'))
     .pipe(gulp.dest('dist'))
+});
+
+gulp.task('copy-static-files', function (callback) {
+  return gulp.src([
+    'src/**/*',
+    '!src/**/*.html',
+    '!src/**/*.css',
+    '!src/**/*.scss',
+    '!src/**/*.sass',
+    '!src/**/*.js',],
+    { nodir: true })
+  .pipe(gulp.dest('dist'))
 });
 
 gulp.task('copy-with-references', function(callback) {
@@ -93,14 +105,14 @@ gulp.task('clean:deploy-production-dest', function(){
 
 gulp.task('build-develop', function (callback) {
   runSequence('clean:dist',
-    ['sass', 'copy-with-references', 'images', 'fonts'],
+    ['sass', 'copy-with-references', 'copy-static-files', 'images', 'fonts'],
     callback
   )
 });
 
 gulp.task('build-production', function (callback) {
   runSequence('clean:dist',
-    ['sass', 'useref', 'images', 'fonts'],
+    ['sass', 'useref', 'copy-static-files', 'images', 'fonts'],
     callback
   )
 });
