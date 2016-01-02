@@ -34,6 +34,11 @@
     "run-sequence": "^1.1.5"
   },
   "dependencies": {
-    "express": "^4.13.3"
+    "express": "^4.13.3",
+    "gulp-flatten": "^0.2.0",
+    "gulp-html-src": "^1.0.0",
+    "gulp-imagemin": "^2.4.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-replace": "^0.5.4"
   }
 }
