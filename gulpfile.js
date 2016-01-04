@@ -15,13 +15,13 @@ var gulp = require('gulp'),
   debug = require('gulp-debug');
 
 gulp.task('sass', function() {
-  return gulp.src('src/scss/**/*.scss')
-    .pipe(sass()) // Converts Sass to CSS with gulp-sass
-    .pipe(gulp.dest('src/css'))
+  return gulp.src('src/scss/app.scss')
+    .pipe(sass())
+    .pipe(gulp.dest('src/css'));
 });
 
 gulp.task('watch', ['sass'], function () {
-  gulp.watch('src/scss/**/*.scss', ['sass'])
+  gulp.watch('src/scss/**/*.scss', ['sass']);
 });
 
 gulp.task('useref', function() {
@@ -29,7 +29,8 @@ gulp.task('useref', function() {
     .pipe(useref())
     .pipe(gulpif('*.js', uglify()))
     .pipe(gulpif('*.css', minifyCss()))
-    .pipe(gulp.dest('dist'))
+    .pipe(debug())
+    .pipe(gulp.dest('dist'));
 });
 
 gulp.task('copy-css-references', function() {
@@ -50,7 +51,7 @@ gulp.task('copy-modified-html-files', function() {
   return gulp.src('src/**/*.html')
     .pipe(replace(/..\/bower_components\/.*\/(.*\.js)/g, 'js/$1'))
     .pipe(replace(/..\/bower_components\/.*\/(.*\.css)/g, 'css/$1'))
-    .pipe(gulp.dest('dist'))
+    .pipe(gulp.dest('dist'));
 });
 
 gulp.task('copy-static-files', function (callback) {
@@ -62,28 +63,27 @@ gulp.task('copy-static-files', function (callback) {
     '!src/**/*.sass',
     '!src/**/*.js',],
     { nodir: true })
-  .pipe(gulp.dest('dist'))
+  .pipe(gulp.dest('dist'));
 });
 
 gulp.task('copy-with-references', function(callback) {
   runSequence(
     ['copy-css-references', 'copy-js-references', 'copy-modified-html-files'],
     callback
-  )
+  );
 });
 
 gulp.task('images', function(){
   return gulp.src('src/images/**/*.+(png|jpg|jpeg|gif|svg|bmp|ico)')
-  // Caching images that ran through imagemin
   .pipe(cache(imagemin({
       interlaced: true
     })))
-  .pipe(gulp.dest('dist/images'))
+  .pipe(gulp.dest('dist/images'));
 });
 
 gulp.task('fonts', function() {
   return gulp.src('src/fonts/**/*')
-  .pipe(gulp.dest('dist/fonts'))
+  .pipe(gulp.dest('dist/fonts'));
 });
 
 gulp.task('clean', function(callback) {
@@ -92,29 +92,31 @@ gulp.task('clean', function(callback) {
 });
 
 gulp.task('clean:dist', function(){
-  return del(['dist/**/*', '!dist/images', '!dist/images/**/*'])
+  return del(['dist/**/*', '!dist/images', '!dist/images/**/*']);
 });
 
 gulp.task('clean:deploy-develop-dest', function(){
-  return del('/var/www/html/develop.stevefarbota.com/**/*', {force: true})
+  return del('/var/www/html/develop.stevefarbota.com/**/*', {force: true});
 });
 
 gulp.task('clean:deploy-production-dest', function(){
-  return del('/var/www/html/stevefarbota.com/**/*', {force: true})
+  return del('/var/www/html/stevefarbota.com/**/*', {force: true});
 });
 
 gulp.task('build-develop', function (callback) {
   runSequence('clean:dist',
-    ['sass', 'copy-with-references', 'copy-static-files', 'images', 'fonts'],
+    'sass',
+    ['copy-with-references', 'copy-static-files', 'images', 'fonts'],
     callback
-  )
+  );
 });
 
 gulp.task('build-production', function (callback) {
   runSequence('clean:dist',
-    ['sass', 'useref', 'copy-static-files', 'images', 'fonts'],
+    'sass',
+    ['useref', 'copy-static-files', 'images', 'fonts'],
     callback
-  )
+  );
 });
 
 gulp.task('deploy-develop:root', function (callback) {
@@ -134,7 +136,7 @@ gulp.task('deploy-develop:root', function (callback) {
     '!LICENSE',
     '!README.md',
     '!stevefarbota.com.js'])
-  .pipe(gulp.dest('/var/www/html/develop.stevefarbota.com'))
+  .pipe(gulp.dest('/var/www/html/develop.stevefarbota.com'));
 });
 
 gulp.task('deploy-develop:stevefarbota.com.js', function (callback) {
@@ -144,17 +146,17 @@ gulp.task('deploy-develop:stevefarbota.com.js', function (callback) {
   .pipe(rename({
     prefix: "develop.",
   }))
-  .pipe(gulp.dest('/var/www/html/develop.stevefarbota.com'))
+  .pipe(gulp.dest('/var/www/html/develop.stevefarbota.com'));
 });
 
 gulp.task('deploy-develop:dist', function (callback) {
   return gulp.src('dist/**/*')
-  .pipe(gulp.dest('/var/www/html/develop.stevefarbota.com/httpdocs'))
+  .pipe(gulp.dest('/var/www/html/develop.stevefarbota.com/httpdocs'));
 });
 
 gulp.task('deploy-develop:express', function (callback) {
   return gulp.src('node_modules/express/**/*')
-  .pipe(gulp.dest('/var/www/html/develop.stevefarbota.com/node_modules/express'))
+  .pipe(gulp.dest('/var/www/html/develop.stevefarbota.com/node_modules/express'));
 });
 
 gulp.task('deploy-develop', function (callback) {
@@ -162,7 +164,7 @@ gulp.task('deploy-develop', function (callback) {
     'clean:deploy-develop-dest',
     ['deploy-develop:root', 'deploy-develop:stevefarbota.com.js', 'deploy-develop:dist', 'deploy-develop:express'],
     callback
-  )
+  );
 });
 
 gulp.task('deploy-production:root', function (callback) {
@@ -181,17 +183,17 @@ gulp.task('deploy-production:root', function (callback) {
     '!gulpfile.js',
     '!LICENSE',
     '!README.md'])
-  .pipe(gulp.dest('/var/www/html/stevefarbota.com'))
+  .pipe(gulp.dest('/var/www/html/stevefarbota.com'));
 });
 
 gulp.task('deploy-production:dist', function (callback) {
   return gulp.src('dist/**/*')
-  .pipe(gulp.dest('/var/www/html/stevefarbota.com/httpdocs'))
+  .pipe(gulp.dest('/var/www/html/stevefarbota.com/httpdocs'));
 });
 
 gulp.task('deploy-production:express', function (callback) {
   return gulp.src('node_modules/express/**/*')
-  .pipe(gulp.dest('/var/www/html/stevefarbota.com/node_modules/express'))
+  .pipe(gulp.dest('/var/www/html/stevefarbota.com/node_modules/express'));
 });
 
 gulp.task('deploy-production', function (callback) {
@@ -199,11 +201,11 @@ gulp.task('deploy-production', function (callback) {
     'clean:deploy-production-dest',
     ['deploy-production:root', 'deploy-production:dist', 'deploy-production:express'],
     callback
-  )
+  );
 });
 
 gulp.task('default', function (callback) {
   runSequence(['sass', 'watch'],
     callback
-  )
+  );
 });

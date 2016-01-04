@@ -5,17 +5,17 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Steve Farbota | Developer</title>
-  <link rel="stylesheet" href="css/styles.min.css">
+  <link rel="stylesheet" href="css/styles-main.min.css">
 </head>
 
 <body>
-  <div class="off-canvas-wrapper">
+  <div id="wrapper" class="off-canvas-wrapper m-scene">
     <div class="off-canvas-wrapper-inner" data-off-canvas-wrapper>
-      <div class="off-canvas position-left reveal-for-large" id="my-info" data-off-canvas data-position="left">
+      <div class="off-canvas position-left reveal-for-large" id="nav-menu" data-off-canvas data-position="left">
         <div class="row column">
           <br>
           <h5>Steve Farbota<br/><span class="subheading">Developer</span></h5>
-          <ul class="side-nav">
+          <ul class="vertical menu">
             <li>
               <a href="/">About</a>
             </li>
@@ -29,18 +29,20 @@
         </div>
       </div>
       <div class="off-canvas-content" data-off-canvas-content>
-        <div class="title-bar hide-for-large">
-          <div class="title-bar-left">
-            <button class="menu-icon" type="button" data-open="my-info"></button>
-            <span class="title-bar-title">Steve Farbota | Developer</span>
-          </div>
-        </div>
-        <div id="main-content-wrapper" class="large-10 columns">
-          <div id="main-content" class="row scene_element scene_element--fadein">
-            <div class="can-explode">
-              <h3>About</h3>
-              <p>Flexible web application developer, creative and logical thinker, and passionate techie.  Experience as a freelance developer as well as a quality assurance analyst/developer in a corporate environment.</p>
-              <a href="/playground.html" id="explore-playground" class="small radius button">Explore Playground</a>
+        <div id="page-wrapper" class="large-12 columns">
+          <div id="main-content-wrapper" class="row">
+            <div class="title-bar hide-for-large">
+              <div class="title-bar-left">
+                <button class="menu-icon" type="button" data-open="nav-menu"></button>
+                <span class="title-bar-title">Steve Farbota | Developer</span>
+              </div>
+            </div>
+            <div id="main-content" class="scene_element scene_element--fadein">
+              <div class="can-explode">
+                <h3>About</h3>
+                <p>Flexible web application developer, creative and logical thinker, and passionate techie.  Experience as a freelance developer as well as a quality assurance analyst/developer in a corporate environment.</p>
+                <a href="/playground.html" id="explore-playground" class="button explode-trigger">Explore Playground</a>
+              </div>
             </div>
           </div>
           <footer id="main-footer" class="row">
@@ -57,7 +59,8 @@
       </div>
     </div>
   </div>
-  <script src="js/scripts.min.js"></script>
+  <script src="js/scripts-main.min.js"></script>
+  <script src="js/scripts-about.min.js"></script>
 </body>
 
 </html>
