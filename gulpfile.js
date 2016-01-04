@@ -29,7 +29,6 @@ gulp.task('useref', function() {
     .pipe(useref())
     .pipe(gulpif('*.js', uglify()))
     .pipe(gulpif('*.css', minifyCss()))
-    .pipe(debug())
     .pipe(gulp.dest('dist'));
 });
 
