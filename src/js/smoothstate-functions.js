@@ -54,6 +54,7 @@ $(function(){
             });
             
             $(document).foundation();
+            positionMainFooter();
           }
         }
       },
