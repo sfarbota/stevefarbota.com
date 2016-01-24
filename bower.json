@@ -23,8 +23,11 @@
   ],
   "dependencies": {
     "foundation-sites": "~6.1.1",
-    "modernizr": "~3.2.0",
+    "modernizr": "~3.3.1",
     "smoothstate": "~0.7.2",
     "gsap": "~1.18.2"
+  },
+  "resolutions": {
+    "modernizr": "~3.3.1"
   }
 }
