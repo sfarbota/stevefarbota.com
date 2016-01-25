@@ -32,6 +32,9 @@ $(function(){
             // Inject the new content
             $container.html($newContent);
             
+            redirectToRealDomain();
+            callGoogleAnalytics();
+            
             var slowTimeline = new TimelineMax({repeat: -1});
             var mediumTimeline = new TimelineMax({repeat: -1});
             var fastTimeline = new TimelineMax({repeat: -1});

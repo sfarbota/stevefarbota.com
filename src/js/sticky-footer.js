@@ -44,13 +44,12 @@ function positionMainFooter() {
   }
 }
 
-$(document)
-  .ready(function() {
-    positionMainFooter();
-    $(window)
-      .scroll(positionMainFooter);
-    $(window)
-      .resize(positionMainFooter);
-    $(window)
-      .load(positionMainFooter);
-  });
+$(document).ready(function() {
+  positionMainFooter();
+  $(window)
+    .scroll(positionMainFooter);
+  $(window)
+    .resize(positionMainFooter);
+  $(window)
+    .load(positionMainFooter);
+});

@@ -12,11 +12,12 @@ var gulp = require('gulp'),
   cache = require('gulp-cache'),
   del = require('del'),
   runSequence = require('run-sequence'),
-  debug = require('gulp-debug');
+  debug = require('gulp-debug'),
+  sitemap = require('gulp-sitemap');
 
 gulp.task('sass', function() {
   return gulp.src('src/scss/app.scss')
-    .pipe(sass())
+    .pipe(sass({includePaths: ['bower_components/foundation-sites/scss']}))
     .pipe(gulp.dest('src/css'));
 });
 
@@ -84,6 +85,14 @@ gulp.task('fonts', function() {
   return gulp.src('src/fonts/**/*')
   .pipe(gulp.dest('dist/fonts'));
 });
+ 
+gulp.task('sitemap', function () {
+    gulp.src('dist/**/*.html')
+        .pipe(sitemap({
+            siteUrl: 'http://www.stevefarbota.com'
+        }))
+        .pipe(gulp.dest('dist'));
+});
 
 gulp.task('clean', function(callback) {
   del('dist');
@@ -106,6 +115,7 @@ gulp.task('build-develop', function (callback) {
   runSequence('clean:dist',
     'sass',
     ['copy-with-references', 'copy-static-files', 'images', 'fonts'],
+    'sitemap',
     callback
   );
 });
@@ -114,6 +124,7 @@ gulp.task('build-production', function (callback) {
   runSequence('clean:dist',
     'sass',
     ['useref', 'copy-static-files', 'images', 'fonts'],
+    'sitemap',
     callback
   );
 });
