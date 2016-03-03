@@ -25,7 +25,9 @@
     "foundation-sites": "~6.1.1",
     "modernizr": "~3.3.1",
     "smoothstate": "~0.7.2",
-    "gsap": "~1.18.2"
+    "gsap": "~1.18.2",
+    "color-thief": "^2.0.1",
+    "randomcolor": "davidmerfield/randomColor#^0.4.4"
   },
   "resolutions": {
     "modernizr": "~3.3.1"

@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
+        <loc>http://www.stevefarbota.com/current-areas-of-focus.html</loc>
+        <lastmod>2016-03-01T06:15:35.000Z</lastmod>
+    </url>
+    <url>
         <loc>http://www.stevefarbota.com/</loc>
-        <lastmod>2016-01-25T02:20:46.000Z</lastmod>
+        <lastmod>2016-03-01T06:15:35.000Z</lastmod>
     </url>
     <url>
         <loc>http://www.stevefarbota.com/playground.html</loc>
-        <lastmod>2016-01-25T02:20:48.000Z</lastmod>
+        <lastmod>2016-03-01T06:15:35.000Z</lastmod>
     </url>
 </urlset>

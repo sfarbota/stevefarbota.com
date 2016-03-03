@@ -40,10 +40,10 @@
               </div>
             </div>
             <div id="main-content" class="scene_element scene_element--fadein">
-              <div class="can-explode">
-                <h3>About</h3>
-                <p>Flexible web application developer, creative and logical thinker, and passionate techie.  Experience as a freelance developer as well as a quality assurance analyst/developer in a corporate environment.</p>
-                <a href="/playground.html" id="explore-playground" class="button explode-trigger">Explore Playground</a>
+              <div>
+                <h3>Current Areas of Focus</h3>
+                <p>These are a few of the thoughts that are currently bouncing around in my head. This data is being pulled live from <a href="http://stackoverflow.com/users/170309/sfarbota" target="_blank">my StackOverflow profile</a>.</p>
+                <div id="current-areas-of-focus-container"></div>
               </div>
             </div>
           </div>
@@ -62,21 +62,23 @@
     </div>
   </div>
   <!--build:js js/scripts-main.min.js -->
-  <script src="js/jquery.js"></script>
+  <script src="../bower_components/jquery/dist/jquery.js"></script>
   <script src="js/redirect-to-real-domain.js"></script>
   <script src="js/google-analytics.js"></script>
-  <script src="js/foundation.js"></script>
-  <script src="js/TweenMax.js"></script>
-  <script src="js/TimelineMax.js"></script>
-  <script src="js/CSSPlugin.js"></script>
-  <script src="js/EasePack.js"></script>
-  <script src="js/jquery.smoothState.js"></script>
+  <script src="../bower_components/foundation-sites/dist/foundation.js"></script>
+  <script src="../bower_components/gsap/src/uncompressed/TweenMax.js"></script>
+  <script src="../bower_components/gsap/src/uncompressed/TimelineMax.js"></script>
+  <script src="../bower_components/gsap/src/uncompressed/plugins/CSSPlugin.js"></script>
+  <script src="../bower_components/gsap/src/uncompressed/easing/EasePack.js"></script>
+  <script src="../bower_components/smoothstate/src/jquery.smoothState.js"></script>
   <script src="js/sticky-footer.js"></script>
   <script src="js/smoothstate-functions.js"></script>
   <script src="js/foundation-init.js"></script>
   <!-- endbuild -->
-  <!--build:js js/scripts-about.min.js -->
-  <script src="js/explode.js"></script>
+  <!--build:js js/scripts-current-areas-of-focus.min.js -->
+  <script src="../bower_components/color-thief/src/color-thief.js"></script>
+  <script src="../bower_components/randomcolor/randomColor.js"></script>
+  <script src="js/current-areas-of-focus.js"></script>
   <!-- endbuild -->
 </body>
 

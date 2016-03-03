@@ -99,15 +99,19 @@ gulp.task('clean', function(callback) {
   return cache.clearAll(callback);
 });
 
-gulp.task('clean:dist', function(){
+gulp.task('clean:dist', function() {
   return del(['dist/**/*', '!dist/images', '!dist/images/**/*']);
 });
 
-gulp.task('clean:deploy-develop-dest', function(){
-  return del('/var/www/html/develop.stevefarbota.com/**/*', {force: true});
+gulp.task('clean:deploy-develop-back-end-dest', function() {
+  return del(['/var/www/html/develop.stevefarbota.com/**/*', '!/var/www/html/develop.stevefarbota.com/httpdocs'], {force: true});
 });
 
-gulp.task('clean:deploy-production-dest', function(){
+gulp.task('clean:deploy-develop-front-end-dest', function() {
+  return del('/var/www/html/develop.stevefarbota.com/httpdocs/**/*', {force: true});
+});
+
+gulp.task('clean:deploy-production-dest', function() {
   return del('/var/www/html/stevefarbota.com/**/*', {force: true});
 });
 
@@ -149,6 +153,14 @@ gulp.task('deploy-develop:root', function (callback) {
   .pipe(gulp.dest('/var/www/html/develop.stevefarbota.com'));
 });
 
+gulp.task('deploy-develop:front-end', function (callback) {
+  runSequence('build-develop',
+    'clean:deploy-develop-front-end-dest',
+    'deploy-develop:dist',
+    callback
+  );
+});
+
 gulp.task('deploy-develop:stevefarbota.com.js', function (callback) {
   return gulp.src('stevefarbota.com.js')
   .pipe(replace('8080', '8181'))
@@ -169,10 +181,15 @@ gulp.task('deploy-develop:express', function (callback) {
   .pipe(gulp.dest('/var/www/html/develop.stevefarbota.com/node_modules/express'));
 });
 
+gulp.task('deploy-develop:back-end', function (callback) {
+  runSequence('clean:deploy-develop-back-end-dest',
+    ['deploy-develop:stevefarbota.com.js', 'deploy-develop:root', 'deploy-develop:express'],
+    callback
+  );
+});
+
 gulp.task('deploy-develop', function (callback) {
-  runSequence('build-develop',
-    'clean:deploy-develop-dest',
-    ['deploy-develop:root', 'deploy-develop:stevefarbota.com.js', 'deploy-develop:dist', 'deploy-develop:express'],
+  runSequence(['deploy-develop:back-end', 'deploy-develop:front-end'],
     callback
   );
 });
