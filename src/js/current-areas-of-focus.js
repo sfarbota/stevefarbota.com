@@ -1,11 +1,17 @@
 var imageFileExtensions = ['svg', 'png'];
 
 var stackOverflowUserId = 170309;
-var stackOverflowTagCount = 6;
+var stackOverflowTagCount = 4;
 var stackOverflowMaxTagAgeInMonths = 12;
 
+var gitHubUserId = 'sfarbota';
+var gitHubTagCount = 1;
+var gitHubMaxTagAgeInMonths = 12;
+var gitHubTagDescriptions = {};
+var gitHubTagUsageCounts=[];
+
 var jsFiddleUserId = 'sfarbota';
-var jsFiddleTagCount = 4;
+var jsFiddleTagCount = 3;
 
 var totalTagCount = 0;
 
@@ -37,10 +43,11 @@ var balls = [];
 
 calculateTotalTagCount();
 getStackOverflowTags();
+getGitHubTags();
 getJSFiddleTags();
 
 function calculateTotalTagCount() {
-  var tagCounts = [stackOverflowTagCount, jsFiddleTagCount];
+  var tagCounts = [stackOverflowTagCount, gitHubTagCount, jsFiddleTagCount];
   var curTotalTagCount = 0;
   
   $.each(tagCounts, function() {
@@ -74,49 +81,99 @@ function getJSFiddleTags() {
   });
 }
 
-function getStackOverflowTags(monthCount) {
-  monthCount = monthCount || 1;
+function getStackOverflowTags(tagAgeInMonths) {
+  tagAgeInMonths = tagAgeInMonths || 1;
   
-  if (monthCount <= stackOverflowMaxTagAgeInMonths) {
+  if (tagAgeInMonths <= stackOverflowMaxTagAgeInMonths) {
     $.getJSON('https://api.stackexchange.com/2.2/users/' + stackOverflowUserId + '/tags'
-      + '?site=stackoverflow'
-      + '&sort=popular'
-      + '&order=desc'
-      + '&fromdate=' + Math.round(new Date().setDate((new Date()).getDate() - (30 * monthCount)) / 1000)
-      + '&pagesize=' + stackOverflowTagCount
-      + '&page=1',
-      function(data) {
-        if (data.items.length === 0) {
-          getStackOverflowTags(monthCount + 1);
-        } else {
-          stackOverflowTagCount = data.items.length;
-          calculateTotalTagCount();
-          
-          var tags = [];
-          var tagUsageCounts = [];
-          
-          $.each(data.items, function(key, val) {
-            tags.push(val.name);
-            tagUsageCounts.push(val.count);
+        + '?site=stackoverflow'
+        + '&sort=popular'
+        + '&order=desc'
+        + '&fromdate=' + Math.round(new Date().setDate((new Date()).getDate() - (30 * tagAgeInMonths)) / 1000)
+        + '&pagesize=' + stackOverflowTagCount
+        + '&page=1',
+        function(data) {
+      if (data.items.length === 0) {
+        getStackOverflowTags(tagAgeInMonths + 1);
+      } else {
+        stackOverflowTagCount = data.items.length;
+        calculateTotalTagCount();
+        
+        var tags = [];
+        var tagUsageCounts = [];
+        
+        $.each(data.items, function(key, val) {
+          tags.push(val.name);
+          tagUsageCounts.push(val.count);
+        });
+        
+        var tagDescriptions = [];
+        
+        $.getJSON('https://api.stackexchange.com/2.2/tags/' + tags.join(';') + '/wikis'
+            + '?site=stackoverflow',
+            function(tagDetailData) {
+          $.each(tagDetailData.items, function(key, val) {
+            tagDescriptions[val.tag_name] = val.excerpt;
           });
-          
-          var tagDescriptions = [];
-          
-          $.getJSON('https://api.stackexchange.com/2.2/tags/' + tags.join(';') + '/wikis?site=stackoverflow', function(tagDetailData) {
-            $.each(tagDetailData.items, function(key, val) {
-              tagDescriptions[val.tag_name] = val.excerpt;
-            });
-          });
-          
+        
           var minAndMaxTagUsageCounts = getMinAndMaxValues(tagUsageCounts);
           
           $.each(data.items, function(key, val) {
             createBall(minAndMaxTagUsageCounts, val.count, val.name.replace(/\-/g, ' '), tagDescriptions[val.name]);
           });
-        }
+        });
+      }
     });
   } else {
     stackOverflowTagCount = 0;
+    calculateTotalTagCount();
+  }
+}
+
+function getGitHubTags(tagAgeInMonths) {
+  tagAgeInMonths = tagAgeInMonths || 1;
+  
+  if (tagAgeInMonths <= gitHubMaxTagAgeInMonths) {
+    $.getJSON('https://api.github.com/users/' + gitHubUserId + '/repos'
+        + '?type=all'
+        + '&sort=updated'
+        + '&direction=desc',
+        function(data) {
+      if (data.length === 0) {
+        getGitHubTags(tagAgeInMonths + 1);
+      } else {
+        if (data.length < gitHubTagCount) {
+          gitHubTagCount = data.length;
+          calculateTotalTagCount();
+        }
+        
+        $.each(data, function(key, val) {
+          if (key < gitHubTagCount) {
+            gitHubTagDescriptions[val.name] = val.description;
+            
+            var sinceDate = new Date();
+            sinceDate.setDate((new Date()).getDate() - (30 * tagAgeInMonths));
+            
+            $.getJSON('https://api.github.com/repos/' + gitHubUserId + '/' + val.name + '/commits'
+                + '?since=' + sinceDate.toISOString()
+                , function(commitData) {
+              gitHubTagUsageCounts.push(commitData.length);
+              
+              if (key === gitHubTagCount - 1) {
+                var minAndMaxTagUsageCounts = getMinAndMaxValues(gitHubTagUsageCounts);
+                
+                $.each(gitHubTagDescriptions, function(key2, val2) {
+                  createBall(minAndMaxTagUsageCounts, gitHubTagUsageCounts[key2], key2.replace(/\-/g, ' '), gitHubTagDescriptions[key2]);
+                });
+              }
+            });
+          }
+        });
+      }
+    });
+  } else {
+    gitHubTagCount = 0;
+    calculateTotalTagCount();
   }
 }
 
@@ -186,7 +243,7 @@ function pushBall(minAndMaxTagUsageCounts, curTagUsageCount, color, imageSource,
   var ballRRange = maxBallR - minBallR;
   var tagUsageCountRange = maxTagUsageCount - minTagUsageCount;
   var tagUsageCountThresholdIfEqual = 1;
-  var ballR = minTagUsageCount == maxTagUsageCount
+  var ballR = minTagUsageCount === maxTagUsageCount
       ? maxTagUsageCount > tagUsageCountThresholdIfEqual
         ? maxBallR
         : minBallR
@@ -195,7 +252,7 @@ function pushBall(minAndMaxTagUsageCounts, curTagUsageCount, color, imageSource,
 }
 
 function checkIfAllBallsHaveBeenPushed() {
-  if (balls.length == totalTagCount) {
+  if (balls.length === totalTagCount) {
     initDrawing();
     setInterval(moveBalls, 10);
   }
