@@ -1,8 +1,12 @@
+var imageFileExtensions = ['svg', 'png'];
+
 var stackOverflowUserId = 170309;
 var stackOverflowTagCount = 6;
+var stackOverflowMaxTagAgeInMonths = 12;
 
 var jsFiddleUserId = 'sfarbota';
 var jsFiddleTagCount = 4;
+
 var totalTagCount = 0;
 
 var minContainerR = 100;
@@ -47,7 +51,12 @@ function calculateTotalTagCount() {
 }
 
 function getJSFiddleTags() {
-  $.getJSON('http://jsfiddle.net/api/user/' + jsFiddleUserId + '/demo/list.json?limit=' + jsFiddleTagCount + '&sort=date&order=desc&callback=?', function(data) {
+  $.getJSON('http://jsfiddle.net/api/user/' + jsFiddleUserId + '/demo/list.json'
+      + '?sort=date'
+      + '&order=desc'
+      + '&limit=' + jsFiddleTagCount
+      + '&callback=?',
+      function(data) {
     jsFiddleTagCount = data.list.length;
     calculateTotalTagCount();
     
@@ -61,45 +70,54 @@ function getJSFiddleTags() {
     
     $.each(data.list, function(key, val) {
       createBall(minAndMaxTagUsageCounts, val.latest_version, val.title, val.description);
-  
-      if (key >= jsFiddleTagCount - 1) {
-        return false;
-      }
     });
   });
 }
 
-function getStackOverflowTags() {
-  $.getJSON('https://api.stackexchange.com/2.2/users/' + stackOverflowUserId + '/tags?sort=popular&order=desc&pagesize=' + stackOverflowTagCount + '&page=1&site=stackoverflow', function(data) {
-    stackOverflowTagCount = data.items.length;
-    calculateTotalTagCount();
-    
-    var tags = [];
-    var tagUsageCounts = [];
-    
-    $.each(data.items, function(key, val) {
-      tags.push(val.name);
-      tagUsageCounts.push(val.count);
-    });
-    
-    var tagDescriptions = [];
-    
-    $.getJSON('https://api.stackexchange.com/2.2/tags/' + tags.join(';') + '/wikis?site=stackoverflow', function(tagDetailData) {
-      $.each(tagDetailData.items, function(key, val) {
-        tagDescriptions[val.tag_name] = val.excerpt;
-      });
-    });
-    
-    var minAndMaxTagUsageCounts = getMinAndMaxValues(tagUsageCounts);
-    
-    $.each(data.items, function(key, val) {
-      createBall(minAndMaxTagUsageCounts, val.count, val.name.replace(/\-/g, ' '), tagDescriptions[val.name]);
+function getStackOverflowTags(monthCount) {
+  monthCount = monthCount || 1;
   
-      if (key >= stackOverflowTagCount - 1) {
-        return false;
-      }
+  if (monthCount <= stackOverflowMaxTagAgeInMonths) {
+    $.getJSON('https://api.stackexchange.com/2.2/users/' + stackOverflowUserId + '/tags'
+      + '?site=stackoverflow'
+      + '&sort=popular'
+      + '&order=desc'
+      + '&fromdate=' + Math.round(new Date().setDate((new Date()).getDate() - (30 * monthCount)) / 1000)
+      + '&pagesize=' + stackOverflowTagCount
+      + '&page=1',
+      function(data) {
+        if (data.items.length === 0) {
+          getStackOverflowTags(monthCount + 1);
+        } else {
+          stackOverflowTagCount = data.items.length;
+          calculateTotalTagCount();
+          
+          var tags = [];
+          var tagUsageCounts = [];
+          
+          $.each(data.items, function(key, val) {
+            tags.push(val.name);
+            tagUsageCounts.push(val.count);
+          });
+          
+          var tagDescriptions = [];
+          
+          $.getJSON('https://api.stackexchange.com/2.2/tags/' + tags.join(';') + '/wikis?site=stackoverflow', function(tagDetailData) {
+            $.each(tagDetailData.items, function(key, val) {
+              tagDescriptions[val.tag_name] = val.excerpt;
+            });
+          });
+          
+          var minAndMaxTagUsageCounts = getMinAndMaxValues(tagUsageCounts);
+          
+          $.each(data.items, function(key, val) {
+            createBall(minAndMaxTagUsageCounts, val.count, val.name.replace(/\-/g, ' '), tagDescriptions[val.name]);
+          });
+        }
     });
-  });
+  } else {
+    stackOverflowTagCount = 0;
+  }
 }
 
 function getMinAndMaxValues(values) {
@@ -119,19 +137,18 @@ function getMinAndMaxValues(values) {
   return [min, max];
 }
 
-function createBall(minAndMaxTagUsageCounts, tagUsageCount, title, description) {
-  var minTagUsageCount = minAndMaxTagUsageCounts[0]
-  var maxTagUsageCount = minAndMaxTagUsageCounts[1];
-  var imageSource = '/images/' + title.toLowerCase().replace(/[^a-zA-Z\d]+/g, '-') + '.png';
+function createBall(minAndMaxTagUsageCounts, tagUsageCount, title, description, imageFileExtensionIndex) {
+  imageFileExtensionIndex = imageFileExtensionIndex || 0;
+  var imageSource = '/images/current-areas-of-focus/' + title.toLowerCase().replace(/[^a-zA-Z\d]+/g, '-') + '.' + imageFileExtensions[imageFileExtensionIndex];
   
   $.get(imageSource).done(function() {
+    foundImage = true;
     var image = new Image(100, 100);
     image.src = imageSource;
     
     image.onload = function() {
       var colors = (new ColorThief()).getPalette(image, 5, 10);
       var dominantColor = null;
-      var defaultColor = [0, 0, 0];
       var minRGBDifference = 20;
       var i = 0;
       while (dominantColor === null && i < colors.length) {
@@ -144,24 +161,36 @@ function createBall(minAndMaxTagUsageCounts, tagUsageCount, title, description) 
         i++;
       }
       if (dominantColor === null) {
-        dominantColor = defaultColor;
+        dominantColor = randomColor({hue: 'random', luminosity: 'bright', count: 1});
+      } else {
+        dominantColor = 'rgb(' + dominantColor.join(',') + ')';
       }
-      var dominantColorRGB = 'rgb(' + dominantColor.join(',') + ')';
-      pushBall(minTagUsageCount, maxTagUsageCount, tagUsageCount, dominantColorRGB, imageSource, title, description);
+      pushBall(minAndMaxTagUsageCounts, tagUsageCount, dominantColor, imageSource, title, description);
       checkIfAllBallsHaveBeenPushed();
     };
   }).fail(function() {
-      pushBall(minTagUsageCount, maxTagUsageCount, tagUsageCount, randomColor({hue: 'random', luminosity: 'bright', count: 1}), null, title, description);
+    if (imageFileExtensionIndex < imageFileExtensions.length - 1) {
+      createBall(minAndMaxTagUsageCounts, tagUsageCount, title, description, imageFileExtensionIndex + 1)
+    } else {
+      pushBall(minAndMaxTagUsageCounts, tagUsageCount, randomColor({hue: 'random', luminosity: 'bright', count: 1}), null, title, description);
       checkIfAllBallsHaveBeenPushed();
+    }
   });
 }
 
-function pushBall(minTagUsageCount, maxTagUsageCount, curTagUsageCount, color, imageSource, title, description) {
+function pushBall(minAndMaxTagUsageCounts, curTagUsageCount, color, imageSource, title, description) {
+  var minTagUsageCount = minAndMaxTagUsageCounts[0]
+  var maxTagUsageCount = minAndMaxTagUsageCounts[1];
   var minBallR = minBallPercentageOfContainerR * containerR;
   var maxBallR = maxBallPercentageOfContainerR * containerR;
   var ballRRange = maxBallR - minBallR;
   var tagUsageCountRange = maxTagUsageCount - minTagUsageCount;
-  var ballR = (ballRRange * (curTagUsageCount - minTagUsageCount) / tagUsageCountRange) + minBallR;
+  var tagUsageCountThresholdIfEqual = 1;
+  var ballR = minTagUsageCount == maxTagUsageCount
+      ? maxTagUsageCount > tagUsageCountThresholdIfEqual
+        ? maxBallR
+        : minBallR
+      : (ballRRange * (curTagUsageCount - minTagUsageCount) / tagUsageCountRange) + minBallR;
   balls.push(getBall(containerR * (Math.random() + 0.5), containerR * (Math.random() + 0.5), (Math.random() < 0.5 ? -1 : 1) * speed, (Math.random() < 0.5 ? -1 : 1) * speed, ballR, color, imageSource, title, description));
 }
 
