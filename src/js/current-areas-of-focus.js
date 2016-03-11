@@ -37,7 +37,7 @@ var textLineSpacing = containerR / 20;
 var svgNamespace = 'http://www.w3.org/2000/svg';
 var svg = document.createElementNS(svgNamespace, 'svg');
 svg.id = 'svg-wrapper';
-$('#current-areas-of-focus-container').append(svg);
+container.appendChild(svg);
 
 var balls = [];
 
@@ -262,12 +262,13 @@ function getBall(xVal, yVal, dxVal, dyVal, rVal, colorVal, imageVal, titleVal, d
   var ball = {
     x: xVal,
     y: yVal,
+    originalX: xVal,
+    originalY: yVal,
     dx: dxVal,
     dy: dyVal,
     r: rVal,
     color: colorVal,
     image: imageVal,
-    imageObject: imageVal,
     title: titleVal,
     description: descriptionVal
   };
@@ -285,23 +286,20 @@ function initDrawing() {
   for (var i = 0; i < balls.length; i++) {
     var curBall = balls[i];
     
+    var curBallGroup = document.createElementNS(svgNamespace, 'g');
+    curBallGroup.id = 'ball-' + i + '-group';
+    curBallGroup.style.cursor = 'pointer';
+    curBallGroup.setAttribute('x', 0);
+    curBallGroup.setAttribute('y', 0)
+    svg.appendChild(curBallGroup);
+    
     var curBallBackground = document.createElementNS(svgNamespace, 'circle');
-    curBallBackground.id = 'ball-' + i;
+    curBallBackground.id = 'ball-' + i + '-background';
     curBallBackground.setAttribute('cx', curBall.x);
     curBallBackground.setAttribute('cy', curBall.y);
     curBallBackground.setAttribute('r',  curBall.r);
     curBallBackground.setAttribute('fill', curBall.color);
-    curBallBackground.style.cursor = 'pointer';
-    
-    var curBallPopup = document.createElementNS(svgNamespace,'rect');
-    curBallPopup.id = 'ball-' + i + '-popup';
-    curBallPopup.setAttribute('x', curBall.x - (containerR / 2));
-    curBallPopup.setAttribute('y', curBall.y + (curBall.r * (3 / 4)));
-    curBallPopup.setAttribute('width', containerR);
-    curBallPopup.setAttribute('height', containerR);
-    curBallPopup.setAttribute('fill', '#fff');
-    curBallPopup.style.cursor = 'pointer';
-    curBallPopup.style.visibility = 'hidden';
+    curBallGroup.appendChild(curBallBackground);
 
     if (curBall.image !== null) {
       var curBallImage = document.createElementNS(svgNamespace, 'image');
@@ -311,55 +309,60 @@ function initDrawing() {
       curBallImage.setAttribute('width', curBall.r * 1.4);
       curBallImage.setAttribute('x', curBall.x - (curBall.r * 0.7));
       curBallImage.setAttribute('y', curBall.y - (curBall.r * 0.7));
-      curBallImage.style.cursor = 'pointer';
-      $('#svg-wrapper').append(curBallBackground);
-      $('#svg-wrapper').append(curBallImage);
+      curBallGroup.appendChild(curBallImage);
     } else {
 			var curBallText = document.createElementNS(svgNamespace, 'text');
       curBallText.id = 'ball-' + i + '-text';
       curBallText.setAttribute('x', curBall.x);
       curBallText.setAttribute('y', curBall.y);
       curBallText.setAttribute('fill', '#000');
-      curBallText.style.cursor = 'pointer';
-      $('#svg-wrapper').append(curBallBackground);
-      $('#svg-wrapper').append(curBallText);
+      curBallGroup.appendChild(curBallText);
+      
       var titleWords = curBall.title.toUpperCase().split(' ');
+      
       for (var j = 0; j < titleWords.length; j++) {
         var curTitleWordTextSpan = document.createElementNS(svgNamespace, 'tspan');
         curTitleWordTextSpan.setAttribute('dy', textLineSpacing + 'px');
         curTitleWordTextSpan.textContent = titleWords[j];
-        $('#ball-' + i + '-text').append(curTitleWordTextSpan);
+        curBallText.appendChild(curTitleWordTextSpan);
         curTitleWordTextSpan.setAttribute('x', curBall.x - (curTitleWordTextSpan.getComputedTextLength() / 2));
       }
+      
       curBallText.setAttribute('x', curBall.x - (curBallText.getComputedTextLength() / 2));
       curBallText.setAttribute('y', curBall.y - (textSize + ((titleWords.length - 1) * textLineSpacing)) / 2);
     }
     
-    $('#svg-wrapper').append(curBallPopup);
+    var curBallPopupGroup = document.createElementNS(svgNamespace, 'g');
+    curBallPopupGroup.id = 'ball-' + i + '-popup-group';
+    curBallPopupGroup.style.visibility = 'hidden';
+    curBallGroup.appendChild(curBallPopupGroup);
+    
+    var curBallPopupBackground = document.createElementNS(svgNamespace,'rect');
+    curBallPopupBackground.id = 'ball-' + i + '-popup-background';
+    curBallPopupBackground.setAttribute('x', curBall.x - (containerR / 2));
+    curBallPopupBackground.setAttribute('y', curBall.y + (curBall.r * (3 / 4)));
+    curBallPopupBackground.setAttribute('width', containerR);
+    curBallPopupBackground.setAttribute('height', containerR / 2);
+    curBallPopupBackground.setAttribute('fill', '#fff');
+    curBallPopupGroup.appendChild(curBallPopupBackground);
   }
 }
 
 function moveBalls() {
   for (var i = 0; i < balls.length; i++) {
-    var ballPopup = $('#ball-' + i + '-popup')[0];
+    var curBallPopupGroup = $('#ball-' + i + '-popup-group')[0];
     
-    if (! $('#ball-' + i).filter(function() { return $(this).is(':hover'); }).length
-    		&& ! $('#ball-' + i + '-image').filter(function() { return $(this).is(':hover'); }).length
-    		&& ! $('#ball-' + i + '-text').filter(function() { return $(this).is(':hover'); }).length
-    		&& ! $('#ball-' + i + '-popup').filter(function() { return $(this).is(':hover'); }).length) {
-      ballPopup.style.visibility = 'hidden';
+    if (! $('#ball-' + i + '-group').filter(function() { return $(this).is(':hover'); }).length) {
+      curBallPopupGroup.style.visibility = 'hidden';
 		  moveBall(i);
     } else {
-      ballPopup.style.visibility = 'visible';
+      curBallPopupGroup.style.visibility = 'visible';
     }
   }
 }
 
 function moveBall(i) {
   ball = balls[i];
-  
-  ball.x += ball.dx;
-  ball.y += ball.dy;
   
   var dx = ball.x - containerR;
   var dy = ball.y - containerR;
@@ -377,26 +380,8 @@ function moveBall(i) {
     ball.dy = normalSpeed * normalY + tangentSpeed * tangentY;
   }
   
-  var ballBackground = $('#ball-' + i)[0];
-  ballBackground.setAttribute('cx', ball.x);
-  ballBackground.setAttribute('cy', ball.y);
-
-  if (ball.image !== null) {
-    var ballImage = $('#ball-' + i + '-image')[0];
-    ballImage.setAttribute('x', ball.x - (ball.r * 0.7));
-    ballImage.setAttribute('y', ball.y - (ball.r * 0.7));
-  } else {
-		var ballText = $('#ball-' + i + '-text')[0];
-    var titleWords = ball.title.toUpperCase().split(' ');
-    for (var j = 0; j < titleWords.length; j++) {
-		  var curTitleWordTextSpan = ballText.children[j];
-      curTitleWordTextSpan.setAttribute('x', ball.x - (curTitleWordTextSpan.getComputedTextLength() / 2));
-    }
-    ballText.setAttribute('x', ball.x - (ballText.getComputedTextLength() / 2));
-    ballText.setAttribute('y', ball.y - (textSize + ((titleWords.length - 1) * textLineSpacing)) / 2);
-  }
+  ball.x += ball.dx;
+  ball.y += ball.dy;
   
-  var ballPopup = $('#ball-' + i + '-popup')[0];
-  ballPopup.setAttribute('x', ball.x - (containerR / 2));
-  ballPopup.setAttribute('y', ball.y + (ball.r * (3 / 4)));
+  $('#ball-' + i + '-group')[0].setAttribute('transform', 'translate(' + (ball.x - ball.originalX) + ', ' + (ball.y - ball.originalY) + ')');
 }
