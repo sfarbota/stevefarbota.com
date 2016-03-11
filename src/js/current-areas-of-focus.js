@@ -292,6 +292,16 @@ function initDrawing() {
     curBallBackground.setAttributeNS(null, 'r',  curBall.r);
     curBallBackground.setAttributeNS(null, 'fill', curBall.color);
     curBallBackground.style.cursor = 'pointer';
+    
+    var curBallPopup = document.createElementNS(svgNamespace,'rect');
+    curBallPopup.id = 'ball-' + i + '-popup';
+    curBallPopup.setAttributeNS(null,'x', curBall.x - (containerR / 2));
+    curBallPopup.setAttributeNS(null,'y', curBall.y + (curBall.r * (3 / 4)));
+    curBallPopup.setAttributeNS(null,'width', containerR);
+    curBallPopup.setAttributeNS(null,'height', containerR);
+    curBallPopup.setAttributeNS(null, 'fill', '#fff');
+    curBallPopup.style.cursor = 'pointer';
+    curBallPopup.style.visibility = 'hidden';
 
     if (curBall.image !== null) {
       var curBallImage = document.createElementNS(svgNamespace, 'image');
@@ -324,15 +334,23 @@ function initDrawing() {
       curBallText.setAttributeNS(null,'x', curBall.x - (curBallText.getComputedTextLength() / 2));
       curBallText.setAttributeNS(null,'y', curBall.y - (textSize + ((titleWords.length - 1) * textLineSpacing)) / 2);
     }
+    
+    $('#svg-wrapper').append(curBallPopup);
   }
 }
 
 function moveBalls() {
   for (var i = 0; i < balls.length; i++) {
+    var ballPopup = $('#ball-' + i + '-popup')[0];
+    
     if (! $('#ball-' + i).filter(function() { return $(this).is(':hover'); }).length
     		&& ! $('#ball-' + i + '-image').filter(function() { return $(this).is(':hover'); }).length
-    		&& ! $('#ball-' + i + '-text').filter(function() { return $(this).is(':hover'); }).length) {
+    		&& ! $('#ball-' + i + '-text').filter(function() { return $(this).is(':hover'); }).length
+    		&& ! $('#ball-' + i + '-popup').filter(function() { return $(this).is(':hover'); }).length) {
+      ballPopup.style.visibility = 'hidden';
 		  moveBall(i);
+    } else {
+      ballPopup.style.visibility = 'visible';
     }
   }
 }
@@ -359,9 +377,9 @@ function moveBall(i) {
     ball.dy = normalSpeed * normalY + tangentSpeed * tangentY;
   }
   
-  var background = $('#ball-' + i)[0];
-  background.setAttributeNS(null, 'cx', ball.x);
-  background.setAttributeNS(null, 'cy', ball.y);
+  var ballBackground = $('#ball-' + i)[0];
+  ballBackground.setAttributeNS(null, 'cx', ball.x);
+  ballBackground.setAttributeNS(null, 'cy', ball.y);
 
   if (ball.image !== null) {
     var ballImage = $('#ball-' + i + '-image')[0];
@@ -377,4 +395,8 @@ function moveBall(i) {
     ballText.setAttributeNS(null,'x', ball.x - (ballText.getComputedTextLength() / 2));
     ballText.setAttributeNS(null,'y', ball.y - (textSize + ((titleWords.length - 1) * textLineSpacing)) / 2);
   }
+  
+  var ballPopup = $('#ball-' + i + '-popup')[0];
+  ballPopup.setAttributeNS(null,'x', ball.x - (containerR / 2));
+  ballPopup.setAttributeNS(null,'y', ball.y + (ball.r * (3 / 4)));
 }
