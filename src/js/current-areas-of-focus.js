@@ -1,4 +1,14 @@
 var imageFileExtensions = ['svg', 'png'];
+var XTextAlignment = Object.freeze({
+  LEFT: 0,
+  CENTER: 0.5,
+  RIGHT: 1
+});
+var YTextAlignment = Object.freeze({
+  TOP: 0,
+  MIDDLE: 0.5,
+  BOTTOM: 1
+});
 
 var stackOverflowUserId = 170309;
 var stackOverflowTagCount = 4;
@@ -19,6 +29,7 @@ var minContainerR = 100;
 var minBallPercentageOfContainerR = 0.15;
 var maxBallPercentageOfContainerR = 0.35;
 var speedPercentageOfContainerR = 0.003;
+var minBallBackgroundRGBDifference = 75;
 
 var container = document.getElementById('current-areas-of-focus-container');
 var containerRect = container.getBoundingClientRect();
@@ -31,8 +42,14 @@ var containerR = (containerHeight < containerWidth ? containerHeight : container
 containerR = containerR < minContainerR ? minContainerR : containerR;
 
 var speed = speedPercentageOfContainerR * containerR;
-var textSize = containerR / 20;
-var textLineSpacing = containerR / 20;
+var baseTextSize = containerR / 20;
+var baseTextLineSpacing = containerR / 15;
+var ballTitleTextSizeMultiplier = 1;
+var ballPopupTitleTextSizeMultiplier = 2;
+var ballPopupDescriptionTextSizeMultiplier = 1;
+var ballPopupBackgroundWidth = containerR;
+var ballPopupOuterPadding = (ballPopupBackgroundWidth / 10);
+var ballPopupInnerPadding = (ballPopupBackgroundWidth / 20);
 
 var svgNamespace = 'http://www.w3.org/2000/svg';
 var svg = document.createElementNS(svgNamespace, 'svg');
@@ -206,13 +223,12 @@ function createBall(minAndMaxTagUsageCounts, tagUsageCount, title, description, 
     image.onload = function() {
       var colors = (new ColorThief()).getPalette(image, 5, 10);
       var dominantColor = null;
-      var minRGBDifference = 20;
       var i = 0;
       while (dominantColor === null && i < colors.length) {
         var curColor = colors[i];
-        if (! (Math.abs(curColor[0] - curColor[1]) < minRGBDifference
-            && Math.abs(curColor[0] - curColor[2]) < minRGBDifference
-            && Math.abs(curColor[1] - curColor[2]) < minRGBDifference)) {
+        if (! (Math.abs(curColor[0] - curColor[1]) < minBallBackgroundRGBDifference
+            && Math.abs(curColor[0] - curColor[2]) < minBallBackgroundRGBDifference
+            && Math.abs(curColor[1] - curColor[2]) < minBallBackgroundRGBDifference)) {
           dominantColor = curColor;
         }
         i++;
@@ -281,7 +297,7 @@ function initDrawing() {
   svg.style.height = containerR * 2 + 'px';
   svg.style.borderRadius = containerR + 'px';
   svg.style.background = '#eee';
-	svg.style.font = textSize + 'px Arial';
+	svg.style.font = baseTextSize + 'px Arial';
 	
   for (var i = 0; i < balls.length; i++) {
     var curBall = balls[i];
@@ -311,25 +327,18 @@ function initDrawing() {
       curBallImage.setAttribute('y', curBall.y - (curBall.r * 0.7));
       curBallGroup.appendChild(curBallImage);
     } else {
-			var curBallText = document.createElementNS(svgNamespace, 'text');
+      var maxTextWidth = Math.sqrt((Math.pow(curBall.r * 2, 2) / 2));
+			var curBallText = createMultiLineSVGTextElement(
+			    curBall.title.toUpperCase(),
+			    curBallGroup,
+			    maxTextWidth,
+			    curBall.x,
+			    curBall.y,
+			    ballTitleTextSizeMultiplier,
+			    XTextAlignment.CENTER,
+			    YTextAlignment.MIDDLE)
       curBallText.id = 'ball-' + i + '-text';
-      curBallText.setAttribute('x', curBall.x);
-      curBallText.setAttribute('y', curBall.y);
       curBallText.setAttribute('fill', '#000');
-      curBallGroup.appendChild(curBallText);
-      
-      var titleWords = curBall.title.toUpperCase().split(' ');
-      
-      for (var j = 0; j < titleWords.length; j++) {
-        var curTitleWordTextSpan = document.createElementNS(svgNamespace, 'tspan');
-        curTitleWordTextSpan.setAttribute('dy', textLineSpacing + 'px');
-        curTitleWordTextSpan.textContent = titleWords[j];
-        curBallText.appendChild(curTitleWordTextSpan);
-        curTitleWordTextSpan.setAttribute('x', curBall.x - (curTitleWordTextSpan.getComputedTextLength() / 2));
-      }
-      
-      curBallText.setAttribute('x', curBall.x - (curBallText.getComputedTextLength() / 2));
-      curBallText.setAttribute('y', curBall.y - (textSize + ((titleWords.length - 1) * textLineSpacing)) / 2);
     }
     
     var curBallPopupGroup = document.createElementNS(svgNamespace, 'g');
@@ -341,11 +350,92 @@ function initDrawing() {
     curBallPopupBackground.id = 'ball-' + i + '-popup-background';
     curBallPopupBackground.setAttribute('x', curBall.x - (containerR / 2));
     curBallPopupBackground.setAttribute('y', curBall.y + (curBall.r * (3 / 4)));
-    curBallPopupBackground.setAttribute('width', containerR);
+    curBallPopupBackground.setAttribute('width', ballPopupBackgroundWidth);
     curBallPopupBackground.setAttribute('height', containerR / 2);
     curBallPopupBackground.setAttribute('fill', '#fff');
     curBallPopupGroup.appendChild(curBallPopupBackground);
+    
+    var curBallPopupTitle = createMultiLineSVGTextElement(
+        curBall.title,
+        curBallPopupGroup,
+        ballPopupBackgroundWidth
+            - ballPopupOuterPadding
+            - ballPopupOuterPadding,
+        parseFloat(curBallPopupBackground.getAttribute('x'))
+            + ballPopupOuterPadding,
+        parseFloat(curBallPopupBackground.getAttribute('y'))
+            + ballPopupOuterPadding,
+        ballPopupTitleTextSizeMultiplier,
+        XTextAlignment.LEFT,
+        YTextAlignment.TOP);
+    curBallPopupTitle.id = 'ball-' + i + '-popup-title';
+    curBallPopupTitle.setAttribute('fill', '#000');
+    
+    var curBallPopupDescription = createMultiLineSVGTextElement(
+        curBall.description,
+        curBallPopupGroup,
+        ballPopupBackgroundWidth
+            - ballPopupOuterPadding
+            - ballPopupOuterPadding,
+        parseFloat(curBallPopupBackground.getAttribute('x'))
+            + ballPopupOuterPadding,
+        parseFloat(curBallPopupBackground.getAttribute('y'))
+            + ballPopupOuterPadding
+            + curBallPopupTitle.getBoundingClientRect().height
+            + ballPopupInnerPadding,
+        ballPopupDescriptionTextSizeMultiplier,
+        XTextAlignment.LEFT,
+        YTextAlignment.TOP);
+    curBallPopupDescription.id = 'ball-' + i + '-popup-description';
+    curBallPopupDescription.setAttribute('fill', '#000');
+    
+    curBallPopupBackground.setAttribute('height',
+        ballPopupOuterPadding
+        + curBallPopupTitle.getBoundingClientRect().height
+        + ballPopupInnerPadding
+        + curBallPopupDescription.getBoundingClientRect().height
+        + ballPopupOuterPadding
+    );
   }
+}
+
+function createMultiLineSVGTextElement(text, parentElement, maxLineWidth, x, y, textSizeMultiplier, xTextAlignment, yTextAlignment) {
+  var textSize = baseTextSize * textSizeMultiplier;
+  var textLineSpacing = baseTextLineSpacing * textSizeMultiplier;
+  
+  var svgTextElement = document.createElementNS(svgNamespace,'text');
+  parentElement.appendChild(svgTextElement);
+  svgTextElement.setAttribute('x', x);
+  svgTextElement.setAttribute('y', y);
+  svgTextElement.style.font = textSize + 'px Arial';
+  
+  var words = text.split(' ');
+  var curLineTextSpanElement = document.createElementNS(svgNamespace, 'tspan');
+  curLineTextSpanElement.setAttribute('x', x);
+  curLineTextSpanElement.setAttribute('dy', 0);
+  svgTextElement.appendChild(curLineTextSpanElement);
+  curLineTextSpanElement.textContent = words[0];
+  
+  for (var i = 1; i < words.length; i++) {
+    curLineTextSpanElement.textContent += ' ' + words[i];
+    
+    if (curLineTextSpanElement.getComputedTextLength() > maxLineWidth) {
+      var curLineText = curLineTextSpanElement.textContent
+      curLineTextSpanElement.textContent = curLineText.substring(0, curLineText.lastIndexOf(' '));
+      alignElementText(curLineTextSpanElement, textSize, textLineSpacing, xTextAlignment);
+      
+      curLineTextSpanElement = document.createElementNS(svgNamespace, 'tspan');
+      curLineTextSpanElement.setAttribute('x', x);
+      curLineTextSpanElement.setAttribute('dy', textLineSpacing + 'px');
+      svgTextElement.appendChild(curLineTextSpanElement);
+      curLineTextSpanElement.textContent = words[i];
+    }
+  }
+    
+  alignElementText(curLineTextSpanElement, textSize, textLineSpacing, xTextAlignment);
+  alignElementText(svgTextElement, textSize, textLineSpacing, xTextAlignment, yTextAlignment);
+  
+  return svgTextElement;
 }
 
 function moveBalls() {
@@ -358,6 +448,15 @@ function moveBalls() {
     } else {
       curBallPopupGroup.style.visibility = 'visible';
     }
+  }
+}
+
+function alignElementText(element, textSize, textLineSpacing, xTextAlignment, yTextAlignment) {
+  if (typeof xTextAlignment != 'undefined') {
+    element.setAttribute('x', parseFloat(element.getAttribute('x')) - element.getComputedTextLength() * xTextAlignment);
+  }
+  if (typeof yTextAlignment != 'undefined') {
+    element.setAttribute('y', parseFloat(element.getAttribute('y')) - ((element.childNodes.length - 1) * textLineSpacing + textSize) * yTextAlignment + textSize);
   }
 }
 
