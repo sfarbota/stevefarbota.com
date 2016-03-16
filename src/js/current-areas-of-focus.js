@@ -1,4 +1,3 @@
-var imageFileExtensions = ['svg', 'png'];
 var XTextAlignment = Object.freeze({
   LEFT: 0,
   CENTER: 0.5,
@@ -9,6 +8,13 @@ var YTextAlignment = Object.freeze({
   MIDDLE: 0.5,
   BOTTOM: 1
 });
+var Source = Object.freeze({
+  GITHUB: 'GitHub',
+  JSFIDDLE: 'JSFiddle',
+  STACK_OVERFLOW: 'Stack Overflow'
+});
+
+var imageFileExtensions = ['svg', 'png'];
 
 var stackOverflowUserId = 170309;
 var stackOverflowTagCount = 4;
@@ -93,7 +99,7 @@ function getJSFiddleTags() {
     var minAndMaxTagUsageCounts = getMinAndMaxValues(tagUsageCounts);
     
     $.each(data.list, function(key, val) {
-      createBall(minAndMaxTagUsageCounts, val.latest_version, val.title, val.description);
+      createBall(minAndMaxTagUsageCounts, val.latest_version, val.title, val.description, Source.JSFIDDLE);
     });
   });
 }
@@ -136,7 +142,7 @@ function getStackOverflowTags(tagAgeInMonths) {
           var minAndMaxTagUsageCounts = getMinAndMaxValues(tagUsageCounts);
           
           $.each(data.items, function(key, val) {
-            createBall(minAndMaxTagUsageCounts, val.count, val.name.replace(/\-/g, ' '), tagDescriptions[val.name]);
+            createBall(minAndMaxTagUsageCounts, val.count, val.name.replace(/\-/g, ' '), tagDescriptions[val.name], Source.STACK_OVERFLOW);
           });
         });
       }
@@ -180,7 +186,7 @@ function getGitHubTags(tagAgeInMonths) {
                 var minAndMaxTagUsageCounts = getMinAndMaxValues(gitHubTagUsageCounts);
                 
                 $.each(gitHubTagDescriptions, function(key2, val2) {
-                  createBall(minAndMaxTagUsageCounts, gitHubTagUsageCounts[key2], key2.replace(/\-/g, ' '), gitHubTagDescriptions[key2]);
+                  createBall(minAndMaxTagUsageCounts, gitHubTagUsageCounts[key2], key2.replace(/\-/g, ' '), gitHubTagDescriptions[key2], Source.GITHUB);
                 });
               }
             });
@@ -211,7 +217,7 @@ function getMinAndMaxValues(values) {
   return [min, max];
 }
 
-function createBall(minAndMaxTagUsageCounts, tagUsageCount, title, description, imageFileExtensionIndex) {
+function createBall(minAndMaxTagUsageCounts, tagUsageCount, title, description, source, imageFileExtensionIndex) {
   imageFileExtensionIndex = imageFileExtensionIndex || 0;
   var imageSource = '/images/current-areas-of-focus/' + title.toLowerCase().replace(/[^a-zA-Z\d]+/g, '-') + '.' + imageFileExtensions[imageFileExtensionIndex];
   
@@ -238,20 +244,20 @@ function createBall(minAndMaxTagUsageCounts, tagUsageCount, title, description, 
       } else {
         dominantColor = 'rgb(' + dominantColor.join(',') + ')';
       }
-      pushBall(minAndMaxTagUsageCounts, tagUsageCount, dominantColor, imageSource, title, description);
+      pushBall(minAndMaxTagUsageCounts, tagUsageCount, dominantColor, imageSource, title, description, source);
       checkIfAllBallsHaveBeenPushed();
     };
   }).fail(function() {
     if (imageFileExtensionIndex < imageFileExtensions.length - 1) {
-      createBall(minAndMaxTagUsageCounts, tagUsageCount, title, description, imageFileExtensionIndex + 1)
+      createBall(minAndMaxTagUsageCounts, tagUsageCount, title, description, source, imageFileExtensionIndex + 1)
     } else {
-      pushBall(minAndMaxTagUsageCounts, tagUsageCount, randomColor({hue: 'random', luminosity: 'bright', count: 1}), null, title, description);
+      pushBall(minAndMaxTagUsageCounts, tagUsageCount, randomColor({hue: 'random', luminosity: 'bright', count: 1}), null, title, description, source);
       checkIfAllBallsHaveBeenPushed();
     }
   });
 }
 
-function pushBall(minAndMaxTagUsageCounts, curTagUsageCount, color, imageSource, title, description) {
+function pushBall(minAndMaxTagUsageCounts, curTagUsageCount, color, imageSource, title, description, source) {
   var minTagUsageCount = minAndMaxTagUsageCounts[0]
   var maxTagUsageCount = minAndMaxTagUsageCounts[1];
   var minBallR = minBallPercentageOfContainerR * containerR;
@@ -264,7 +270,25 @@ function pushBall(minAndMaxTagUsageCounts, curTagUsageCount, color, imageSource,
         ? maxBallR
         : minBallR
       : (ballRRange * (curTagUsageCount - minTagUsageCount) / tagUsageCountRange) + minBallR;
-  balls.push(getBall(containerR * (Math.random() + 0.5), containerR * (Math.random() + 0.5), (Math.random() < 0.5 ? -1 : 1) * speed, (Math.random() < 0.5 ? -1 : 1) * speed, ballR, color, imageSource, title, description));
+  var randomX = containerR * (Math.random() + 0.5);
+  var randomY = containerR * (Math.random() + 0.5);
+  var randomDx = (Math.random() < 0.5 ? -1 : 1) * speed;
+  var randomDy = (Math.random() < 0.5 ? -1 : 1) * speed;
+  
+  balls.push({
+      x: randomX,
+      y: randomY,
+      originalX: randomX,
+      originalY: randomY,
+      dx: randomDx,
+      dy: randomDy,
+      r: ballR,
+      color: color,
+      image: imageSource,
+      title: title,
+      description: description,
+      source: source
+  });
 }
 
 function checkIfAllBallsHaveBeenPushed() {
@@ -272,24 +296,6 @@ function checkIfAllBallsHaveBeenPushed() {
     initDrawing();
     setInterval(moveBalls, 10);
   }
-}
-
-function getBall(xVal, yVal, dxVal, dyVal, rVal, colorVal, imageVal, titleVal, descriptionVal) {
-  var ball = {
-    x: xVal,
-    y: yVal,
-    originalX: xVal,
-    originalY: yVal,
-    dx: dxVal,
-    dy: dyVal,
-    r: rVal,
-    color: colorVal,
-    image: imageVal,
-    title: titleVal,
-    description: descriptionVal
-  };
-
-  return ball;
 }
 
 function initDrawing() {
@@ -354,6 +360,22 @@ function initDrawing() {
     curBallPopupBackground.setAttribute('height', containerR / 2);
     curBallPopupBackground.setAttribute('fill', '#fff');
     curBallPopupGroup.appendChild(curBallPopupBackground);
+    
+    var curBallPopupSourceImage = createMultiLineSVGTextElement(
+        curBall.title,
+        curBallPopupGroup,
+        ballPopupBackgroundWidth
+            - ballPopupOuterPadding
+            - ballPopupOuterPadding,
+        parseFloat(curBallPopupBackground.getAttribute('x'))
+            + ballPopupOuterPadding,
+        parseFloat(curBallPopupBackground.getAttribute('y'))
+            + ballPopupOuterPadding,
+        ballPopupTitleTextSizeMultiplier,
+        XTextAlignment.LEFT,
+        YTextAlignment.TOP);
+    curBallPopupSourceImage.id = 'ball-' + i + '-popup-title';
+    curBallPopupSourceImage.setAttribute('fill', '#000');
     
     var curBallPopupTitle = createMultiLineSVGTextElement(
         curBall.title,
