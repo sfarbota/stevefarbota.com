@@ -474,13 +474,15 @@ function moveBalls() {
   for (var i = 0; i < balls.length; i++) {
     moveBallPopup(i);
     
+    var curBallGroup = $('#ball-' + i + '-group')[0];
     var curBallPopupGroup = $('#ball-' + i + '-popup-group')[0];
     
-    if (! $('#ball-' + i + '-group').filter(function() { return $(this).is(':hover'); }).length) {
+    if ($('#ball-' + i + '-group').filter(function() { return $(this).is(':hover'); }).length) {
+      curBallGroup.parentNode.appendChild(curBallGroup);
+      curBallPopupGroup.style.visibility = 'visible';
+    } else {
       curBallPopupGroup.style.visibility = 'hidden';
 		  moveBall(i);
-    } else {
-      curBallPopupGroup.style.visibility = 'visible';
     }
   }
 }
