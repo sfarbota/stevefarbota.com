@@ -101,7 +101,7 @@ function getJSFiddleTags() {
     var minAndMaxTagUsageCounts = getMinAndMaxValues(tagUsageCounts);
     
     $.each(data.list, function(key, val) {
-      createBall(minAndMaxTagUsageCounts, val.latest_version, val.title, val.description, Source.JSFIDDLE);
+      getBallTagImage(minAndMaxTagUsageCounts, val.latest_version, val.title, val.description, Source.JSFIDDLE);
     });
   });
 }
@@ -144,7 +144,7 @@ function getStackOverflowTags(tagAgeInMonths) {
           var minAndMaxTagUsageCounts = getMinAndMaxValues(tagUsageCounts);
           
           $.each(data.items, function(key, val) {
-            createBall(minAndMaxTagUsageCounts, val.count, val.name.replace(/\-/g, ' '), tagDescriptions[val.name], Source.STACK_OVERFLOW);
+            getBallTagImage(minAndMaxTagUsageCounts, val.count, val.name.replace(/\-/g, ' '), tagDescriptions[val.name], Source.STACK_OVERFLOW);
           });
         });
       }
@@ -188,7 +188,7 @@ function getGitHubTags(tagAgeInMonths) {
                 var minAndMaxTagUsageCounts = getMinAndMaxValues(gitHubTagUsageCounts);
                 
                 $.each(gitHubTagDescriptions, function(key2, val2) {
-                  createBall(minAndMaxTagUsageCounts, gitHubTagUsageCounts[key2], key2.replace(/\-/g, ' '), gitHubTagDescriptions[key2], Source.GITHUB);
+                  getBallTagImage(minAndMaxTagUsageCounts, gitHubTagUsageCounts[key2], key2.replace(/\-/g, ' '), gitHubTagDescriptions[key2], Source.GITHUB);
                 });
               }
             });
@@ -219,17 +219,16 @@ function getMinAndMaxValues(values) {
   return [min, max];
 }
 
-function createBall(minAndMaxTagUsageCounts, tagUsageCount, title, description, source, imageFileExtensionIndex) {
+function getBallTagImage(minAndMaxTagUsageCounts, tagUsageCount, title, description, source, imageFileExtensionIndex) {
   imageFileExtensionIndex = imageFileExtensionIndex || 0;
-  var imageSource = '/images/current-areas-of-focus/' + title.toLowerCase().replace(/[^a-zA-Z\d]+/g, '-') + '.' + imageFileExtensions[imageFileExtensionIndex];
+  var tagImageSource = '/images/current-areas-of-focus/tags/' + title.toLowerCase().replace(/[^a-zA-Z\d]+/g, '-') + '.' + imageFileExtensions[imageFileExtensionIndex];
   
-  $.get(imageSource).done(function() {
-    foundImage = true;
-    var image = new Image(100, 100);
-    image.src = imageSource;
+  $.get(tagImageSource).done(function() {
+    var tagImage = new Image(100, 100);
+    tagImage.src = tagImageSource;
     
-    image.onload = function() {
-      var colors = (new ColorThief()).getPalette(image, 5, 10);
+    tagImage.onload = function() {
+      var colors = (new ColorThief()).getPalette(tagImage, 5, 10);
       var dominantColor = null;
       var i = 0;
       while (dominantColor === null && i < colors.length) {
@@ -246,20 +245,35 @@ function createBall(minAndMaxTagUsageCounts, tagUsageCount, title, description, 
       } else {
         dominantColor = 'rgb(' + dominantColor.join(',') + ')';
       }
-      pushBall(minAndMaxTagUsageCounts, tagUsageCount, dominantColor, imageSource, title, description, source);
-      checkIfAllBallsHaveBeenPushed();
+      getBallSourceImage(minAndMaxTagUsageCounts, tagUsageCount, dominantColor, title, description, source, tagImageSource);
     };
   }).fail(function() {
     if (imageFileExtensionIndex < imageFileExtensions.length - 1) {
-      createBall(minAndMaxTagUsageCounts, tagUsageCount, title, description, source, imageFileExtensionIndex + 1)
+      getBallTagImage(minAndMaxTagUsageCounts, tagUsageCount, title, description, source, imageFileExtensionIndex + 1)
     } else {
-      pushBall(minAndMaxTagUsageCounts, tagUsageCount, randomColor({hue: 'random', luminosity: 'bright', count: 1}), null, title, description, source);
+      getBallSourceImage(minAndMaxTagUsageCounts, tagUsageCount, randomColor({hue: 'random', luminosity: 'bright', count: 1}), title, description, source, null);
+    }
+  });
+}
+
+function getBallSourceImage(minAndMaxTagUsageCounts, tagUsageCount, color, title, description, source, tagImageSource, imageFileExtensionIndex) {
+  imageFileExtensionIndex = imageFileExtensionIndex || 0;
+  var sourceImageSource = '/images/current-areas-of-focus/sources/' + source.toLowerCase().replace(/[^a-zA-Z\d]+/g, '-') + '.' + imageFileExtensions[imageFileExtensionIndex];
+  
+  $.get(sourceImageSource).done(function() {
+    pushBall(minAndMaxTagUsageCounts, tagUsageCount, color, title, description, source, tagImageSource, sourceImageSource);
+    checkIfAllBallsHaveBeenPushed();
+  }).fail(function() {
+    if (imageFileExtensionIndex < imageFileExtensions.length - 1) {
+      getBallSourceImage(minAndMaxTagUsageCounts, tagUsageCount, color, title, description, source, tagImageSource, imageFileExtensionIndex + 1)
+    } else {
+      pushBall(minAndMaxTagUsageCounts, tagUsageCount, color, title, description, source, tagImageSource, null);
       checkIfAllBallsHaveBeenPushed();
     }
   });
 }
 
-function pushBall(minAndMaxTagUsageCounts, curTagUsageCount, color, imageSource, title, description, source) {
+function pushBall(minAndMaxTagUsageCounts, tagUsageCount, color, title, description, source, tagImageSource, sourceImageSource) {
   var minTagUsageCount = minAndMaxTagUsageCounts[0]
   var maxTagUsageCount = minAndMaxTagUsageCounts[1];
   var minBallR = minBallPercentageOfContainerR * containerR;
@@ -271,7 +285,7 @@ function pushBall(minAndMaxTagUsageCounts, curTagUsageCount, color, imageSource,
       ? maxTagUsageCount > tagUsageCountThresholdIfEqual
         ? maxBallR
         : minBallR
-      : (ballRRange * (curTagUsageCount - minTagUsageCount) / tagUsageCountRange) + minBallR;
+      : (ballRRange * (tagUsageCount - minTagUsageCount) / tagUsageCountRange) + minBallR;
   var randomX = containerR * (Math.random() + 0.5);
   var randomY = containerR * (Math.random() + 0.5);
   var randomDx = (Math.random() < 0.5 ? -1 : 1) * speed;
@@ -286,10 +300,11 @@ function pushBall(minAndMaxTagUsageCounts, curTagUsageCount, color, imageSource,
       dy: randomDy,
       r: ballR,
       color: color,
-      image: imageSource,
       title: title,
       description: description,
-      source: source
+      source: source,
+      tagImage: tagImageSource,
+      sourceImage: sourceImageSource
   });
 }
 
@@ -332,15 +347,15 @@ function initDrawing() {
     curBallBackground.setAttribute('fill', curBall.color);
     curBallGroup.appendChild(curBallBackground);
 
-    if (curBall.image !== null) {
-      var curBallImage = document.createElementNS(svgNamespace, 'image');
-      curBallImage.id = 'ball-' + i + '-image';
-      curBallImage.setAttributeNS('http://www.w3.org/1999/xlink', 'href', curBall.image);
-      curBallImage.setAttribute('height', curBall.r * 1.4);
-      curBallImage.setAttribute('width', curBall.r * 1.4);
-      curBallImage.setAttribute('x', curBall.x - (curBall.r * 0.7));
-      curBallImage.setAttribute('y', curBall.y - (curBall.r * 0.7));
-      curBallGroup.appendChild(curBallImage);
+    if (curBall.tagImage !== null) {
+      var curBallTagImage = document.createElementNS(svgNamespace, 'image');
+      curBallTagImage.id = 'ball-' + i + '-tag-image';
+      curBallTagImage.setAttributeNS('http://www.w3.org/1999/xlink', 'href', curBall.tagImage);
+      curBallTagImage.setAttribute('height', curBall.r * 1.4);
+      curBallTagImage.setAttribute('width', curBall.r * 1.4);
+      curBallTagImage.setAttribute('x', curBall.x - (curBall.r * 0.7));
+      curBallTagImage.setAttribute('y', curBall.y - (curBall.r * 0.7));
+      curBallGroup.appendChild(curBallTagImage);
     } else {
       var maxTextWidth = Math.sqrt((Math.pow(curBall.r * 2, 2) / 2));
 			var curBallText = createMultiLineSVGTextElement(
@@ -370,31 +385,33 @@ function initDrawing() {
     curBallPopupBackground.setAttribute('fill', '#fff');
     curBallPopupBackground.style.boxShadow = '0px 2px 6px 3px rgba(0,0,0,0.4)';
     curBallPopupGroup.appendChild(curBallPopupBackground);
-    
-    var curBallPopupSourceImage = createMultiLineSVGTextElement(
-        curBall.title,
-        curBallPopupGroup,
-        ballPopupBackgroundWidth
-            - ballPopupOuterPadding
-            - ballPopupOuterPadding,
-        parseFloat(curBallPopupBackground.getAttribute('x'))
-            + ballPopupOuterPadding,
-        parseFloat(curBallPopupBackground.getAttribute('y'))
-            + ballPopupOuterPadding,
-        ballPopupTitleTextSizeMultiplier,
-        XTextAlignment.LEFT,
-        YTextAlignment.TOP);
-    curBallPopupSourceImage.id = 'ball-' + i + '-popup-title';
-    curBallPopupSourceImage.setAttribute('fill', '#000');
+
+    var ballPopupTitleXPadding = ballPopupOuterPadding;
+
+    if (curBall.sourceImage !== null) {
+      var curBallPopupSourceImage = document.createElementNS(svgNamespace, 'image');
+      curBallPopupSourceImage.id = 'ball-' + i + '-popup-source-image';
+      curBallPopupSourceImage.setAttributeNS('http://www.w3.org/1999/xlink', 'href', curBall.sourceImage);
+      curBallPopupSourceImage.setAttribute('height', ballPopupOuterPadding + ballPopupTitleTextSizeMultiplier);
+      curBallPopupSourceImage.setAttribute('width', ballPopupOuterPadding + ballPopupTitleTextSizeMultiplier);
+      curBallPopupSourceImage.setAttribute('x', parseFloat(curBallPopupBackground.getAttribute('x')) + ballPopupOuterPadding);
+      curBallPopupSourceImage.setAttribute('y', parseFloat(curBallPopupBackground.getAttribute('y')) + ballPopupOuterPadding);
+      curBallPopupGroup.appendChild(curBallPopupSourceImage);
+      
+      ballPopupTitleXPadding =
+          ballPopupOuterPadding
+          + curBallPopupSourceImage.getBoundingClientRect().width
+          + ballPopupInnerPadding;
+    }
     
     var curBallPopupTitle = createMultiLineSVGTextElement(
         curBall.title,
         curBallPopupGroup,
         ballPopupBackgroundWidth
-            - ballPopupOuterPadding
+            - ballPopupTitleXPadding
             - ballPopupOuterPadding,
         parseFloat(curBallPopupBackground.getAttribute('x'))
-            + ballPopupOuterPadding,
+            + ballPopupTitleXPadding,
         parseFloat(curBallPopupBackground.getAttribute('y'))
             + ballPopupOuterPadding,
         ballPopupTitleTextSizeMultiplier,
