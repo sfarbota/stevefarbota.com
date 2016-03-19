@@ -24,7 +24,8 @@ var gitHubUserId = 'sfarbota';
 var gitHubTagCount = 1;
 var gitHubMaxTagAgeInMonths = 12;
 var gitHubTagDescriptions = {};
-var gitHubTagUsageCounts=[];
+var gitHubTagLinks = {};
+var gitHubTagUsageCounts = [];
 
 var jsFiddleUserId = 'sfarbota';
 var jsFiddleTagCount = 3;
@@ -60,6 +61,8 @@ var ballPopupDistancePercent = 0.67;
 var ballPopupDistancePercentXY = Math.sqrt(Math.pow(ballPopupDistancePercent, 2) / 2);
 
 var svgNamespace = 'http://www.w3.org/2000/svg';
+var xlinkNamespace = 'http://www.w3.org/1999/xlink';
+
 var svg = document.createElementNS(svgNamespace, 'svg');
 svg.id = 'svg-wrapper';
 container.appendChild(svg);
@@ -101,7 +104,14 @@ function getJSFiddleTags() {
     var minAndMaxTagUsageCounts = getMinAndMaxValues(tagUsageCounts);
     
     $.each(data.list, function(key, val) {
-      getBallTagImage(minAndMaxTagUsageCounts, val.latest_version, val.title, val.description, Source.JSFIDDLE);
+      getBallTagImage(
+          minAndMaxTagUsageCounts,
+          val.latest_version,
+          val.title,
+          val.description,
+          val.url,
+          Source.JSFIDDLE
+      );
     });
   });
 }
@@ -144,7 +154,14 @@ function getStackOverflowTags(tagAgeInMonths) {
           var minAndMaxTagUsageCounts = getMinAndMaxValues(tagUsageCounts);
           
           $.each(data.items, function(key, val) {
-            getBallTagImage(minAndMaxTagUsageCounts, val.count, val.name.replace(/\-/g, ' '), tagDescriptions[val.name], Source.STACK_OVERFLOW);
+            getBallTagImage(
+                minAndMaxTagUsageCounts,
+                val.count,
+                val.name.replace(/\-/g, ' '),
+                tagDescriptions[val.name],
+                'http://stackoverflow.com/tags/' + val.name + '/info',
+                Source.STACK_OVERFLOW
+            );
           });
         });
       }
@@ -175,6 +192,7 @@ function getGitHubTags(tagAgeInMonths) {
         $.each(data, function(key, val) {
           if (key < gitHubTagCount) {
             gitHubTagDescriptions[val.name] = val.description;
+            gitHubTagLinks[val.name] = val.html_url;
             
             var sinceDate = new Date();
             sinceDate.setDate((new Date()).getDate() - (30 * tagAgeInMonths));
@@ -188,7 +206,14 @@ function getGitHubTags(tagAgeInMonths) {
                 var minAndMaxTagUsageCounts = getMinAndMaxValues(gitHubTagUsageCounts);
                 
                 $.each(gitHubTagDescriptions, function(key2, val2) {
-                  getBallTagImage(minAndMaxTagUsageCounts, gitHubTagUsageCounts[key2], key2.replace(/\-/g, ' '), gitHubTagDescriptions[key2], Source.GITHUB);
+                  getBallTagImage(
+                      minAndMaxTagUsageCounts,
+                      gitHubTagUsageCounts[key2],
+                      key2.replace(/\-/g, ' '),
+                      gitHubTagDescriptions[key2],
+                      gitHubTagLinks[key2],
+                      Source.GITHUB
+                  );
                 });
               }
             });
@@ -219,7 +244,7 @@ function getMinAndMaxValues(values) {
   return [min, max];
 }
 
-function getBallTagImage(minAndMaxTagUsageCounts, tagUsageCount, title, description, source, imageFileExtensionIndex) {
+function getBallTagImage(minAndMaxTagUsageCounts, tagUsageCount, title, description, link, source, imageFileExtensionIndex) {
   imageFileExtensionIndex = imageFileExtensionIndex || 0;
   var tagImageSource = '/images/current-areas-of-focus/tags/' + title.toLowerCase().replace(/[^a-zA-Z\d]+/g, '-') + '.' + imageFileExtensions[imageFileExtensionIndex];
   
@@ -245,35 +270,35 @@ function getBallTagImage(minAndMaxTagUsageCounts, tagUsageCount, title, descript
       } else {
         dominantColor = 'rgb(' + dominantColor.join(',') + ')';
       }
-      getBallSourceImage(minAndMaxTagUsageCounts, tagUsageCount, dominantColor, title, description, source, tagImageSource);
+      getBallSourceImage(minAndMaxTagUsageCounts, tagUsageCount, dominantColor, title, description, link, source, tagImageSource);
     };
   }).fail(function() {
     if (imageFileExtensionIndex < imageFileExtensions.length - 1) {
-      getBallTagImage(minAndMaxTagUsageCounts, tagUsageCount, title, description, source, imageFileExtensionIndex + 1)
+      getBallTagImage(minAndMaxTagUsageCounts, tagUsageCount, title, description, link, source, imageFileExtensionIndex + 1)
     } else {
-      getBallSourceImage(minAndMaxTagUsageCounts, tagUsageCount, randomColor({hue: 'random', luminosity: 'bright', count: 1}), title, description, source, null);
+      getBallSourceImage(minAndMaxTagUsageCounts, tagUsageCount, randomColor({hue: 'random', luminosity: 'bright', count: 1}), title, description, link, source, null);
     }
   });
 }
 
-function getBallSourceImage(minAndMaxTagUsageCounts, tagUsageCount, color, title, description, source, tagImageSource, imageFileExtensionIndex) {
+function getBallSourceImage(minAndMaxTagUsageCounts, tagUsageCount, color, title, description, link, source, tagImageSource, imageFileExtensionIndex) {
   imageFileExtensionIndex = imageFileExtensionIndex || 0;
   var sourceImageSource = '/images/current-areas-of-focus/sources/' + source.toLowerCase().replace(/[^a-zA-Z\d]+/g, '-') + '.' + imageFileExtensions[imageFileExtensionIndex];
   
   $.get(sourceImageSource).done(function() {
-    pushBall(minAndMaxTagUsageCounts, tagUsageCount, color, title, description, source, tagImageSource, sourceImageSource);
+    pushBall(minAndMaxTagUsageCounts, tagUsageCount, color, title, description, link, source, tagImageSource, sourceImageSource);
     checkIfAllBallsHaveBeenPushed();
   }).fail(function() {
     if (imageFileExtensionIndex < imageFileExtensions.length - 1) {
-      getBallSourceImage(minAndMaxTagUsageCounts, tagUsageCount, color, title, description, source, tagImageSource, imageFileExtensionIndex + 1)
+      getBallSourceImage(minAndMaxTagUsageCounts, tagUsageCount, color, title, description, link, source, tagImageSource, imageFileExtensionIndex + 1)
     } else {
-      pushBall(minAndMaxTagUsageCounts, tagUsageCount, color, title, description, source, tagImageSource, null);
+      pushBall(minAndMaxTagUsageCounts, tagUsageCount, color, title, description, link, source, tagImageSource, null);
       checkIfAllBallsHaveBeenPushed();
     }
   });
 }
 
-function pushBall(minAndMaxTagUsageCounts, tagUsageCount, color, title, description, source, tagImageSource, sourceImageSource) {
+function pushBall(minAndMaxTagUsageCounts, tagUsageCount, color, title, description, link, source, tagImageSource, sourceImageSource) {
   var minTagUsageCount = minAndMaxTagUsageCounts[0]
   var maxTagUsageCount = minAndMaxTagUsageCounts[1];
   var minBallR = minBallPercentageOfContainerR * containerR;
@@ -302,6 +327,7 @@ function pushBall(minAndMaxTagUsageCounts, tagUsageCount, color, title, descript
       color: color,
       title: title,
       description: description,
+      link: link,
       source: source,
       tagImage: tagImageSource,
       sourceImage: sourceImageSource
@@ -350,7 +376,7 @@ function initDrawing() {
     if (curBall.tagImage !== null) {
       var curBallTagImage = document.createElementNS(svgNamespace, 'image');
       curBallTagImage.id = 'ball-' + i + '-tag-image';
-      curBallTagImage.setAttributeNS('http://www.w3.org/1999/xlink', 'href', curBall.tagImage);
+      curBallTagImage.setAttributeNS(xlinkNamespace, 'href', curBall.tagImage);
       curBallTagImage.setAttribute('height', curBall.r * 1.4);
       curBallTagImage.setAttribute('width', curBall.r * 1.4);
       curBallTagImage.setAttribute('x', curBall.x - (curBall.r * 0.7));
@@ -391,9 +417,9 @@ function initDrawing() {
     if (curBall.sourceImage !== null) {
       var curBallPopupSourceImage = document.createElementNS(svgNamespace, 'image');
       curBallPopupSourceImage.id = 'ball-' + i + '-popup-source-image';
-      curBallPopupSourceImage.setAttributeNS('http://www.w3.org/1999/xlink', 'href', curBall.sourceImage);
-      curBallPopupSourceImage.setAttribute('height', ballPopupOuterPadding + ballPopupTitleTextSizeMultiplier);
-      curBallPopupSourceImage.setAttribute('width', ballPopupOuterPadding + ballPopupTitleTextSizeMultiplier);
+      curBallPopupSourceImage.setAttributeNS(xlinkNamespace, 'href', curBall.sourceImage);
+      curBallPopupSourceImage.setAttribute('height', baseTextSize * ballPopupTitleTextSizeMultiplier);
+      curBallPopupSourceImage.setAttribute('width', baseTextSize * ballPopupTitleTextSizeMultiplier);
       curBallPopupSourceImage.setAttribute('x', parseFloat(curBallPopupBackground.getAttribute('x')) + ballPopupOuterPadding);
       curBallPopupSourceImage.setAttribute('y', parseFloat(curBallPopupBackground.getAttribute('y')) + ballPopupOuterPadding);
       curBallPopupGroup.appendChild(curBallPopupSourceImage);
@@ -438,11 +464,36 @@ function initDrawing() {
     curBallPopupDescription.id = 'ball-' + i + '-popup-description';
     curBallPopupDescription.setAttribute('fill', '#000');
     
+    var curBallPopupLink = document.createElementNS(svgNamespace, 'a');
+    curBallPopupLink.setAttributeNS(xlinkNamespace, 'xlink:href', curBall.link);
+    curBallPopupLink.setAttributeNS(xlinkNamespace, 'xlink:show', 'new');
+    curBallPopupGroup.appendChild(curBallPopupLink);
+
+    var curBallPopupLinkText = document.createElementNS(svgNamespace, 'text');
+    curBallPopupLinkText.id = 'ball-' + i + '-popup-link-text';
+    curBallPopupLinkText.setAttribute('x', parseFloat(curBallPopupBackground.getAttribute('x')) + ballPopupOuterPadding);
+    curBallPopupLinkText.setAttribute('y', parseFloat(curBallPopupDescription.getAttribute('y')) + curBallPopupDescription.getBoundingClientRect().height + ballPopupInnerPadding);
+    curBallPopupLinkText.setAttribute('text-decoration', 'underline');
+    curBallPopupLinkText.setAttribute('fill', '#008cba');
+    curBallPopupLinkText.textContent = 'View at source';
+    curBallPopupLink.appendChild(curBallPopupLinkText);
+
+    var curBallPopupLinkImage = document.createElementNS(svgNamespace, 'image');
+    curBallPopupLinkImage.id = 'ball-' + i + '-popup-link-image';
+    curBallPopupLinkImage.setAttributeNS(xlinkNamespace, 'href', '/images/icons/external-link.svg');
+    curBallPopupLinkImage.setAttribute('height', baseTextSize);
+    curBallPopupLinkImage.setAttribute('width', baseTextSize);
+    curBallPopupLinkImage.setAttribute('x', parseFloat(curBallPopupLinkText.getAttribute('x')) + curBallPopupLinkText.getBoundingClientRect().width + ballPopupInnerPadding);
+    curBallPopupLinkImage.setAttribute('y', parseFloat(curBallPopupLinkText.getAttribute('y')));
+    curBallPopupLink.appendChild(curBallPopupLinkImage);
+    
     curBallPopupBackground.setAttribute('height',
         ballPopupOuterPadding
         + curBallPopupTitle.getBoundingClientRect().height
         + ballPopupInnerPadding
         + curBallPopupDescription.getBoundingClientRect().height
+        + ballPopupInnerPadding
+        + curBallPopupLink.getBoundingClientRect().height
         + ballPopupOuterPadding
     );
   }
