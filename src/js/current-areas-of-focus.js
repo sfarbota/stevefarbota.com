@@ -57,8 +57,13 @@ var ballPopupDescriptionTextSizeMultiplier = 1;
 var ballPopupBackgroundWidth = containerR;
 var ballPopupOuterPadding = (ballPopupBackgroundWidth / 10);
 var ballPopupInnerPadding = (ballPopupBackgroundWidth / 20);
-var ballPopupDistancePercent = 0.67;
-var ballPopupDistancePercentXY = Math.sqrt(Math.pow(ballPopupDistancePercent, 2) / 2);
+var ballPopupDistancePercentX = 0.5;
+var ballPopupDistancePercentY = 0;
+var minBallR = minBallPercentageOfContainerR * containerR;
+var maxBallR = maxBallPercentageOfContainerR * containerR;
+var ballRRange = maxBallR - minBallR;
+var ballPopupDistanceX = ballPopupDistancePercentX * minBallR;
+var ballPopupDistanceY = ballPopupDistancePercentY * minBallR;
 
 var svgNamespace = 'http://www.w3.org/2000/svg';
 var xlinkNamespace = 'http://www.w3.org/1999/xlink';
@@ -301,9 +306,6 @@ function getBallSourceImage(minAndMaxTagUsageCounts, tagUsageCount, color, title
 function pushBall(minAndMaxTagUsageCounts, tagUsageCount, color, title, description, link, source, tagImageSource, sourceImageSource) {
   var minTagUsageCount = minAndMaxTagUsageCounts[0]
   var maxTagUsageCount = minAndMaxTagUsageCounts[1];
-  var minBallR = minBallPercentageOfContainerR * containerR;
-  var maxBallR = maxBallPercentageOfContainerR * containerR;
-  var ballRRange = maxBallR - minBallR;
   var tagUsageCountRange = maxTagUsageCount - minTagUsageCount;
   var tagUsageCountThresholdIfEqual = 1;
   var ballR = minTagUsageCount === maxTagUsageCount
@@ -319,6 +321,8 @@ function pushBall(minAndMaxTagUsageCounts, tagUsageCount, color, title, descript
   balls.push({
       x: randomX,
       y: randomY,
+      previousX: randomX,
+      previousY: randomY,
       originalX: randomX,
       originalY: randomY,
       dx: randomDx,
@@ -402,15 +406,28 @@ function initDrawing() {
     curBallPopupGroup.style.visibility = 'hidden';
     curBallGroup.appendChild(curBallPopupGroup);
     
+    var curBallPopupBackgroundX = curBall.x + ballPopupDistanceX;
+    var curBallPopupBackgroundY = curBall.y + ballPopupDistanceY;
+    
     var curBallPopupBackground = document.createElementNS(svgNamespace,'rect');
     curBallPopupBackground.id = 'ball-' + i + '-popup-background';
-    curBallPopupBackground.setAttribute('x', curBall.x + (curBall.r * ballPopupDistancePercentXY));
-    curBallPopupBackground.setAttribute('y', curBall.y + (curBall.r * ballPopupDistancePercentXY));
+    curBallPopupBackground.setAttribute('x', curBallPopupBackgroundX);
+    curBallPopupBackground.setAttribute('y', curBallPopupBackgroundY);
     curBallPopupBackground.setAttribute('width', ballPopupBackgroundWidth);
     curBallPopupBackground.setAttribute('height', containerR / 2);
     curBallPopupBackground.setAttribute('fill', '#fff');
-    curBallPopupBackground.style.boxShadow = '0px 2px 6px 3px rgba(0,0,0,0.4)';
+    //curBallPopupBackground.style.boxShadow = '0px 2px 6px 3px rgba(0,0,0,0.4)';
     curBallPopupGroup.appendChild(curBallPopupBackground);
+    
+    var curBallPopupTail = document.createElementNS(svgNamespace,'polygon');
+    curBallPopupTail.id = 'ball-' + i + '-popup-tail';
+    curBallPopupTail.setAttribute('points',
+        (curBallPopupBackgroundX + 1) + ',' + curBallPopupBackgroundY
+        + ' ' + (curBallPopupBackgroundX - ballPopupDistanceX) + ',' + curBallPopupBackgroundY
+        + ' ' + (curBallPopupBackgroundX + 1) + ',' + (curBallPopupBackgroundY + ballPopupDistanceX + 1)
+    );
+    curBallPopupTail.setAttribute('fill', '#fff');
+    curBallPopupGroup.appendChild(curBallPopupTail);
 
     var ballPopupTitleXPadding = ballPopupOuterPadding;
 
@@ -566,18 +583,41 @@ function alignElementText(element, textSize, textLineSpacing, xTextAlignment, yT
 
 function moveBallPopup(i) {
   var ball = balls[i];
-  var ballPopupBackgroundRect = $('#ball-' + i + '-popup-background')[0].getBoundingClientRect();
-  var xTranslate = 0;
-  var yTranslate = 0;
   
-  if (ball.x > containerR){
-    xTranslate = -(ball.r * ballPopupDistancePercentXY * 2 + ballPopupBackgroundRect.width);
+  if (ball.x > containerR && ball.previousX <= containerR
+      || ball.x <= containerR && ball.previousX > containerR
+      || ball.y > containerR && ball.previousY <= containerR
+      || ball.y <= containerR && ball.previousY > containerR) {
+    var ballPopupGroupXTranslate = 0;
+    var ballPopupGroupYTranslate = 0;
+    var ballPopupTailXTranslate = 0;
+    var ballPopupTailYTranslate = 0;
+    var ballPopupTailXScale = 1;
+    var ballPopupTailYScale = 1;
+    var ballPopupBackgroundRect = $('#ball-' + i + '-popup-background')[0].getBoundingClientRect();
+    var ballPopupTailRect = $('#ball-' + i + '-popup-tail')[0].getBoundingClientRect();
+    
+    if (ball.x > containerR) {
+      ballPopupGroupXTranslate = -(ballPopupDistanceX * 2 + ballPopupBackgroundRect.width);
+      ballPopupTailXTranslate = -((ball.originalX + ballPopupTailRect.width - 1) * 2 + ballPopupBackgroundRect.width);
+      ballPopupTailXScale = -1;
+    }
+    
+    if (ball.y > containerR) {
+      ballPopupGroupYTranslate = -(ballPopupDistanceY * 2 + ballPopupBackgroundRect.height);
+      ballPopupTailYTranslate = -(ball.originalY * 2 + ballPopupBackgroundRect.height);
+      ballPopupTailYScale = -1;
+    }
+    
+    $('#ball-' + i + '-popup-group')[0].setAttribute('transform',
+        'translate(' + ballPopupGroupXTranslate + ', ' + ballPopupGroupYTranslate + ')'
+    );
+    
+    $('#ball-' + i + '-popup-tail')[0].setAttribute('transform',
+        'scale(' + ballPopupTailXScale + ', ' + ballPopupTailYScale + ')'
+        + ' translate(' + ballPopupTailXTranslate + ', ' + ballPopupTailYTranslate + ')'
+    );
   }
-  if (ball.y > containerR){
-    yTranslate = -(ball.r * ballPopupDistancePercentXY * 2 + ballPopupBackgroundRect.height);
-  }
-  
-  $('#ball-' + i + '-popup-group')[0].setAttribute('transform', 'translate(' + xTranslate + ', ' + yTranslate + ')');
 }
 
 function moveBall(i) {
@@ -599,6 +639,8 @@ function moveBall(i) {
     ball.dy = normalSpeed * normalY + tangentSpeed * tangentY;
   }
   
+  ball.previousX = ball.x;
+  ball.previousY = ball.y;
   ball.x += ball.dx;
   ball.y += ball.dy;
   
