@@ -164,7 +164,7 @@ function getStackOverflowTags(tagAgeInMonths) {
                 val.count,
                 val.name.replace(/\-/g, ' '),
                 tagDescriptions[val.name],
-                'http://stackoverflow.com/tags/' + val.name + '/info',
+                'http://stackoverflow.com/search?q=user:' + stackOverflowUserId + '+[' + val.name + ']',
                 Source.STACK_OVERFLOW
             );
           });
