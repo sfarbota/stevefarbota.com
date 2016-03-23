@@ -358,6 +358,43 @@ function initDrawing() {
   svgBackground.setAttribute('r',  containerR);
   svgBackground.setAttribute('fill', '#eee');
   svg.appendChild(svgBackground);
+
+  var defs = document.createElementNS(svgNamespace, 'defs');
+  svg.appendChild(defs);
+
+  var popupShadowFilter = document.createElementNS(svgNamespace, 'filter');
+  popupShadowFilter.setAttribute('id', 'dropshadow');
+  popupShadowFilter.setAttribute('height', '130%');
+  defs.appendChild(popupShadowFilter);
+  
+  var popupShadowFilterGaussianBlur = document.createElementNS(svgNamespace, 'feGaussianBlur');
+  popupShadowFilterGaussianBlur.setAttribute('in', 'SourceAlpha');
+  popupShadowFilterGaussianBlur.setAttribute('stdDeviation', '3');
+  popupShadowFilter.appendChild(popupShadowFilterGaussianBlur);
+  
+  var popupShadowFilterOffset = document.createElementNS(svgNamespace, 'feOffset');
+  popupShadowFilterOffset.setAttribute('dx', '1');
+  popupShadowFilterOffset.setAttribute('dy', '2');
+  popupShadowFilterOffset.setAttribute('result', 'offsetblur');
+  popupShadowFilter.appendChild(popupShadowFilterOffset);
+  
+  var popupShadowFilterComponentTransfer = document.createElementNS(svgNamespace, 'feComponentTransfer');
+  popupShadowFilter.appendChild(popupShadowFilterComponentTransfer);
+  
+  var popupShadowFilterFuncA = document.createElementNS(svgNamespace, 'feFuncA');
+  popupShadowFilterFuncA.setAttribute('type', 'linear');
+  popupShadowFilterFuncA.setAttribute('slope', '0.2');
+  popupShadowFilterComponentTransfer.appendChild(popupShadowFilterFuncA);
+  
+  var popupShadowFilterMerge = document.createElementNS(svgNamespace, 'feMerge');
+  popupShadowFilter.appendChild(popupShadowFilterMerge);
+  
+  var popupShadowFilterMergeNode1 = document.createElementNS(svgNamespace, 'feMergeNode');
+  popupShadowFilterMerge.appendChild(popupShadowFilterMergeNode1);
+  
+  var popupShadowFilterMergeNode2 = document.createElementNS(svgNamespace, 'feMergeNode');
+  popupShadowFilterMergeNode2.setAttribute('in', 'SourceGraphic');
+  popupShadowFilterMerge.appendChild(popupShadowFilterMergeNode2);
 	
   for (var i = 0; i < balls.length; i++) {
     var curBall = balls[i];
@@ -404,6 +441,7 @@ function initDrawing() {
     var curBallPopupGroup = document.createElementNS(svgNamespace, 'g');
     curBallPopupGroup.id = 'ball-' + i + '-popup-group';
     curBallPopupGroup.style.visibility = 'hidden';
+    curBallPopupGroup.style.filter = 'url(#dropshadow)';
     curBallGroup.appendChild(curBallPopupGroup);
     
     var curBallPopupBackgroundX = curBall.x + ballPopupDistanceX;
@@ -416,7 +454,6 @@ function initDrawing() {
     curBallPopupBackground.setAttribute('width', ballPopupBackgroundWidth);
     curBallPopupBackground.setAttribute('height', containerR / 2);
     curBallPopupBackground.setAttribute('fill', '#fff');
-    //curBallPopupBackground.style.boxShadow = '0px 2px 6px 3px rgba(0,0,0,0.4)';
     curBallPopupGroup.appendChild(curBallPopupBackground);
     
     var curBallPopupTail = document.createElementNS(svgNamespace,'polygon');
