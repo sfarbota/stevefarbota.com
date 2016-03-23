@@ -429,6 +429,7 @@ function initDrawing() {
 			    curBall.title.toUpperCase(),
 			    curBallGroup,
 			    maxTextWidth,
+			    true,
 			    curBall.x,
 			    curBall.y,
 			    ballTitleTextSizeMultiplier,
@@ -490,6 +491,7 @@ function initDrawing() {
         ballPopupBackgroundWidth
             - ballPopupTitleXPadding
             - ballPopupOuterPadding,
+        false,
         parseFloat(curBallPopupBackground.getAttribute('x'))
             + ballPopupTitleXPadding,
         parseFloat(curBallPopupBackground.getAttribute('y'))
@@ -506,6 +508,7 @@ function initDrawing() {
         ballPopupBackgroundWidth
             - ballPopupOuterPadding
             - ballPopupOuterPadding,
+        false,
         parseFloat(curBallPopupBackground.getAttribute('x'))
             + ballPopupOuterPadding,
         parseFloat(curBallPopupBackground.getAttribute('y'))
@@ -538,7 +541,7 @@ function initDrawing() {
     curBallPopupLinkImage.setAttribute('height', baseTextSize);
     curBallPopupLinkImage.setAttribute('width', baseTextSize);
     curBallPopupLinkImage.setAttribute('x', parseFloat(curBallPopupLinkText.getAttribute('x')) + curBallPopupLinkText.getBoundingClientRect().width + ballPopupInnerPadding);
-    curBallPopupLinkImage.setAttribute('y', parseFloat(curBallPopupLinkText.getAttribute('y')));
+    curBallPopupLinkImage.setAttribute('y', parseFloat(curBallPopupLinkText.getAttribute('y')) - baseTextSize * 0.8);
     curBallPopupLink.appendChild(curBallPopupLinkImage);
     
     curBallPopupBackground.setAttribute('height',
@@ -553,7 +556,7 @@ function initDrawing() {
   }
 }
 
-function createMultiLineSVGTextElement(text, parentElement, maxLineWidth, x, y, textSizeMultiplier, xTextAlignment, yTextAlignment) {
+function createMultiLineSVGTextElement(text, parentElement, maxLineWidth, growToMaxLineWidth, x, y, textSizeMultiplier, xTextAlignment, yTextAlignment) {
   var textSize = baseTextSize * textSizeMultiplier;
   var textLineSpacing = baseTextLineSpacing * textSizeMultiplier;
   
@@ -589,7 +592,14 @@ function createMultiLineSVGTextElement(text, parentElement, maxLineWidth, x, y, 
   alignElementText(curLineTextSpanElement, textSize, textLineSpacing, xTextAlignment);
   alignElementText(svgTextElement, textSize, textLineSpacing, xTextAlignment, yTextAlignment);
   
-  return svgTextElement;
+  var svgTextElementWidth = svgTextElement.getBoundingClientRect().width;
+  
+  if (svgTextElementWidth > maxLineWidth || growToMaxLineWidth) {
+    parentElement.removeChild(svgTextElement);
+    return createMultiLineSVGTextElement(text, parentElement, maxLineWidth, false, x, y, textSizeMultiplier * (maxLineWidth / svgTextElementWidth), xTextAlignment, yTextAlignment);
+  } else {
+    return svgTextElement;
+  }
 }
 
 function moveBalls() {
