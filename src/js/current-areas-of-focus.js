@@ -25,7 +25,7 @@ var gitHubTagCount = 1;
 var gitHubMaxTagAgeInMonths = 12;
 var gitHubTagDescriptions = {};
 var gitHubTagLinks = {};
-var gitHubTagUsageCounts = [];
+var gitHubTagMultipliers = [];
 
 var jsFiddleUserId = 'sfarbota';
 var jsFiddleTagCount = 3;
@@ -101,23 +101,20 @@ function getJSFiddleTags() {
     jsFiddleTagCount = data.list.length;
     calculateTotalTagCount();
     
-    var tagUsageCounts = [];
-    
-    $.each(data.list, function(key, val) {
-      tagUsageCounts.push(val.latest_version);
-    });
-    
-    var minAndMaxTagUsageCounts = getMinAndMaxValues(tagUsageCounts);
+    var minAndMaxTagMultipliers = [1, jsFiddleTagCount];
+    var curTagMultiplier = jsFiddleTagCount;
     
     $.each(data.list, function(key, val) {
       getBallTagImage(
-          minAndMaxTagUsageCounts,
-          val.latest_version,
+          minAndMaxTagMultipliers,
+          curTagMultiplier,
           val.title,
           val.description,
           val.url,
           Source.JSFIDDLE
       );
+      
+      curTagMultiplier--;
     });
   });
 }
@@ -141,11 +138,11 @@ function getStackOverflowTags(tagAgeInMonths) {
         calculateTotalTagCount();
         
         var tags = [];
-        var tagUsageCounts = [];
+        var tagMultipliers = [];
         
         $.each(data.items, function(key, val) {
           tags.push(val.name);
-          tagUsageCounts.push(val.count);
+          tagMultipliers.push(val.count);
         });
         
         var tagDescriptions = [];
@@ -157,11 +154,11 @@ function getStackOverflowTags(tagAgeInMonths) {
             tagDescriptions[val.tag_name] = val.excerpt;
           });
         
-          var minAndMaxTagUsageCounts = getMinAndMaxValues(tagUsageCounts);
+          var minAndMaxTagMultipliers = getMinAndMaxValues(tagMultipliers);
           
           $.each(data.items, function(key, val) {
             getBallTagImage(
-                minAndMaxTagUsageCounts,
+                minAndMaxTagMultipliers,
                 val.count,
                 val.name.replace(/\-/g, ' '),
                 tagDescriptions[val.name],
@@ -206,15 +203,15 @@ function getGitHubTags(tagAgeInMonths) {
             $.getJSON('https://api.github.com/repos/' + gitHubUserId + '/' + val.name + '/commits'
                 + '?since=' + sinceDate.toISOString()
                 , function(commitData) {
-              gitHubTagUsageCounts.push(commitData.length);
+              gitHubTagMultipliers.push(commitData.length);
               
               if (key === gitHubTagCount - 1) {
-                var minAndMaxTagUsageCounts = getMinAndMaxValues(gitHubTagUsageCounts);
+                var minAndMaxTagMultipliers = getMinAndMaxValues(gitHubTagMultipliers);
                 
                 $.each(gitHubTagDescriptions, function(key2, val2) {
                   getBallTagImage(
-                      minAndMaxTagUsageCounts,
-                      gitHubTagUsageCounts[key2],
+                      minAndMaxTagMultipliers,
+                      gitHubTagMultipliers[key2],
                       key2.replace(/\-/g, ' '),
                       gitHubTagDescriptions[key2],
                       gitHubTagLinks[key2],
@@ -250,7 +247,7 @@ function getMinAndMaxValues(values) {
   return [min, max];
 }
 
-function getBallTagImage(minAndMaxTagUsageCounts, tagUsageCount, title, description, link, source, imageFileExtensionIndex) {
+function getBallTagImage(minAndMaxTagMultipliers, tagMultiplier, title, description, link, source, imageFileExtensionIndex) {
   imageFileExtensionIndex = imageFileExtensionIndex || 0;
   var tagImageSource = '/images/current-areas-of-focus/tags/' + title.toLowerCase().replace(/[^a-zA-Z\d]+/g, '-') + '.' + imageFileExtensions[imageFileExtensionIndex];
   
@@ -276,44 +273,44 @@ function getBallTagImage(minAndMaxTagUsageCounts, tagUsageCount, title, descript
       } else {
         dominantColor = 'rgb(' + dominantColor.join(',') + ')';
       }
-      getBallSourceImage(minAndMaxTagUsageCounts, tagUsageCount, dominantColor, title, description, link, source, tagImageSource);
+      getBallSourceImage(minAndMaxTagMultipliers, tagMultiplier, dominantColor, title, description, link, source, tagImageSource);
     };
   }).fail(function() {
     if (imageFileExtensionIndex < imageFileExtensions.length - 1) {
-      getBallTagImage(minAndMaxTagUsageCounts, tagUsageCount, title, description, link, source, imageFileExtensionIndex + 1)
+      getBallTagImage(minAndMaxTagMultipliers, tagMultiplier, title, description, link, source, imageFileExtensionIndex + 1)
     } else {
-      getBallSourceImage(minAndMaxTagUsageCounts, tagUsageCount, randomColor({hue: 'random', luminosity: 'bright', count: 1}), title, description, link, source, null);
+      getBallSourceImage(minAndMaxTagMultipliers, tagMultiplier, randomColor({hue: 'random', luminosity: 'bright', count: 1}), title, description, link, source, null);
     }
   });
 }
 
-function getBallSourceImage(minAndMaxTagUsageCounts, tagUsageCount, color, title, description, link, source, tagImageSource, imageFileExtensionIndex) {
+function getBallSourceImage(minAndMaxTagMultipliers, tagMultiplier, color, title, description, link, source, tagImageSource, imageFileExtensionIndex) {
   imageFileExtensionIndex = imageFileExtensionIndex || 0;
   var sourceImageSource = '/images/current-areas-of-focus/sources/' + source.toLowerCase().replace(/[^a-zA-Z\d]+/g, '-') + '.' + imageFileExtensions[imageFileExtensionIndex];
   
   $.get(sourceImageSource).done(function() {
-    pushBall(minAndMaxTagUsageCounts, tagUsageCount, color, title, description, link, source, tagImageSource, sourceImageSource);
+    pushBall(minAndMaxTagMultipliers, tagMultiplier, color, title, description, link, source, tagImageSource, sourceImageSource);
     checkIfAllBallsHaveBeenPushed();
   }).fail(function() {
     if (imageFileExtensionIndex < imageFileExtensions.length - 1) {
-      getBallSourceImage(minAndMaxTagUsageCounts, tagUsageCount, color, title, description, link, source, tagImageSource, imageFileExtensionIndex + 1)
+      getBallSourceImage(minAndMaxTagMultipliers, tagMultiplier, color, title, description, link, source, tagImageSource, imageFileExtensionIndex + 1)
     } else {
-      pushBall(minAndMaxTagUsageCounts, tagUsageCount, color, title, description, link, source, tagImageSource, null);
+      pushBall(minAndMaxTagMultipliers, tagMultiplier, color, title, description, link, source, tagImageSource, null);
       checkIfAllBallsHaveBeenPushed();
     }
   });
 }
 
-function pushBall(minAndMaxTagUsageCounts, tagUsageCount, color, title, description, link, source, tagImageSource, sourceImageSource) {
-  var minTagUsageCount = minAndMaxTagUsageCounts[0]
-  var maxTagUsageCount = minAndMaxTagUsageCounts[1];
-  var tagUsageCountRange = maxTagUsageCount - minTagUsageCount;
-  var tagUsageCountThresholdIfEqual = 1;
-  var ballR = minTagUsageCount === maxTagUsageCount
-      ? maxTagUsageCount > tagUsageCountThresholdIfEqual
+function pushBall(minAndMaxTagMultipliers, tagMultiplier, color, title, description, link, source, tagImageSource, sourceImageSource) {
+  var minTagMultiplier = minAndMaxTagMultipliers[0]
+  var maxTagMultiplier = minAndMaxTagMultipliers[1];
+  var tagMultiplierRange = maxTagMultiplier - minTagMultiplier;
+  var tagMultiplierThresholdIfEqual = 1;
+  var ballR = minTagMultiplier === maxTagMultiplier
+      ? maxTagMultiplier > tagMultiplierThresholdIfEqual
         ? maxBallR
         : minBallR
-      : (ballRRange * (tagUsageCount - minTagUsageCount) / tagUsageCountRange) + minBallR;
+      : (ballRRange * (tagMultiplier - minTagMultiplier) / tagMultiplierRange) + minBallR;
   var popupBackgroundHeight = ballPopupBackgroundDefaultHeight;
   var randomX = containerR * (Math.random() + 0.5);
   var randomY = containerR * (Math.random() + 0.5);
