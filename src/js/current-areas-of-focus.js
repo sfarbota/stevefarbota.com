@@ -49,6 +49,7 @@ var containerR = (containerHeight < containerWidth ? containerHeight : container
 containerR = containerR < minContainerR ? minContainerR : containerR;
 
 var speed = speedPercentageOfContainerR * containerR;
+var ballOpacity = 0.8;
 var baseTextSize = containerR / 20;
 var baseTextLineSpacing = containerR / 15;
 var ballTitleTextSizeMultiplier = 1;
@@ -65,6 +66,9 @@ var maxBallR = maxBallPercentageOfContainerR * containerR;
 var ballRRange = maxBallR - minBallR;
 var ballPopupDistanceX = ballPopupDistancePercentX * minBallR;
 var ballPopupDistanceY = ballPopupDistancePercentY * minBallR;
+var PERCENTAGE_OF_LARGEST_SQUARE_INSIDE_CIRCLE = 0.7; // approximate
+var ballTagImagePercentageOfBallR = PERCENTAGE_OF_LARGEST_SQUARE_INSIDE_CIRCLE * 0.9;
+var ballTagImagePercentageOfBallR = PERCENTAGE_OF_LARGEST_SQUARE_INSIDE_CIRCLE * 0.9;
 
 var svgNamespace = 'http://www.w3.org/2000/svg';
 var xlinkNamespace = 'http://www.w3.org/1999/xlink';
@@ -413,16 +417,17 @@ function initDrawing() {
     curBallBackground.setAttribute('cy', curBall.y);
     curBallBackground.setAttribute('r',  curBall.r);
     curBallBackground.setAttribute('fill', curBall.color);
+    curBallBackground.setAttribute('fill-opacity', ballOpacity);
     curBallGroup.appendChild(curBallBackground);
 
     if (curBall.tagImage !== null) {
       var curBallTagImage = document.createElementNS(svgNamespace, 'image');
       curBallTagImage.id = 'ball-' + i + '-tag-image';
       curBallTagImage.setAttributeNS(xlinkNamespace, 'href', curBall.tagImage);
-      curBallTagImage.setAttribute('height', curBall.r * 1.4);
-      curBallTagImage.setAttribute('width', curBall.r * 1.4);
-      curBallTagImage.setAttribute('x', curBall.x - (curBall.r * 0.7));
-      curBallTagImage.setAttribute('y', curBall.y - (curBall.r * 0.7));
+      curBallTagImage.setAttribute('height', curBall.r * 2 * ballTagImagePercentageOfBallR);
+      curBallTagImage.setAttribute('width', curBall.r * 2 * ballTagImagePercentageOfBallR);
+      curBallTagImage.setAttribute('x', curBall.x - (curBall.r * ballTagImagePercentageOfBallR));
+      curBallTagImage.setAttribute('y', curBall.y - (curBall.r * ballTagImagePercentageOfBallR));
       curBallGroup.appendChild(curBallTagImage);
     } else {
       var maxTextWidth = Math.sqrt((Math.pow(curBall.r * 2, 2) / 2));
