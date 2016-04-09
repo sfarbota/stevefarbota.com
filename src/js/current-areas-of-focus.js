@@ -528,6 +528,7 @@ function initDrawing() {
     curBallPopupDescription.setAttribute('fill', '#000');
     
     var curBallPopupLink = document.createElementNS(svgNamespace, 'a');
+    curBallPopupLink.id = 'ball-' + i + '-popup-link';
     curBallPopupLink.setAttributeNS(xlinkNamespace, 'xlink:href', curBall.link);
     curBallPopupLink.setAttributeNS(xlinkNamespace, 'xlink:show', 'new');
     curBallPopupGroup.appendChild(curBallPopupLink);
@@ -536,9 +537,8 @@ function initDrawing() {
     curBallPopupLinkText.id = 'ball-' + i + '-popup-link-text';
     curBallPopupLinkText.setAttribute('x', parseFloat(curBallPopupBackground.getAttribute('x')) + ballPopupOuterPadding);
     curBallPopupLinkText.setAttribute('y', parseFloat(curBallPopupDescription.getAttribute('y')) + curBallPopupDescription.getBoundingClientRect().height + ballPopupInnerPadding);
-    curBallPopupLinkText.setAttribute('text-decoration', 'underline');
     curBallPopupLinkText.setAttribute('fill', '#008cba');
-    curBallPopupLinkText.textContent = 'View at source';
+    curBallPopupLinkText.textContent = 'View on ' + curBall.source;
     curBallPopupLink.appendChild(curBallPopupLinkText);
 
     var curBallPopupLinkImage = document.createElementNS(svgNamespace, 'image');
@@ -615,12 +615,20 @@ function moveBalls() {
     for (var i = 0; i < balls.length; i++) {
       moveBallPopup(i);
       
-      var curBallGroup = $('#ball-' + i + '-group')[0];
+      var curBallGroupArray = $('#ball-' + i + '-group');
+      var curBallGroup = curBallGroupArray[0];
       var curBallPopupGroup = $('#ball-' + i + '-popup-group')[0];
-      
-      if ($('#ball-' + i + '-group').filter(function() { return $(this).is(':hover'); }).length) {
+      if (curBallGroupArray.filter(function() { return $(this).is(':hover'); }).length) {
         curBallGroup.parentNode.appendChild(curBallGroup);
         curBallPopupGroup.style.visibility = 'visible';
+        
+        var curBallPopupLinkArray = $('#ball-' + i + '-popup-link');
+        var curBallPopupLinkText = $('#ball-' + i + '-popup-link-text')[0];
+        if (curBallPopupLinkArray.filter(function() { return $(this).is(':hover'); }).length) {
+          curBallPopupLinkText.setAttribute('text-decoration', 'underline');
+        } else {
+          curBallPopupLinkText.setAttribute('text-decoration', 'none');
+        }
       } else {
         curBallPopupGroup.style.visibility = 'hidden';
   		  moveBall(i);
