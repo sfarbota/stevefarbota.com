@@ -7,7 +7,7 @@ var gulp = require('gulp'),
   rename = require('gulp-rename'),
   replace = require('gulp-replace'),
   uglify = require('gulp-uglify'),
-  minifyCss = require('gulp-minify-css'),
+  cleanCss = require('gulp-clean-css'),
   imagemin = require('gulp-imagemin'),
   cache = require('gulp-cache'),
   del = require('del'),
@@ -29,7 +29,7 @@ gulp.task('useref', function() {
   return gulp.src('src/**/*.html')
     .pipe(useref())
     .pipe(gulpif('*.js', uglify()))
-    .pipe(gulpif('*.css', minifyCss()))
+    .pipe(gulpif('*.css', cleanCss()))
     .pipe(gulp.dest('dist'));
 });
 
