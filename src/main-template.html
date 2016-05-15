@@ -4,7 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Steve Farbota | Developer</title>
-    <link rel="stylesheet" href="css/styles-main.min.css">
+    <!-- build:css css/styles-main.min.css-->
+    <link rel="stylesheet" type="text/css" href="css/app.css">
+    <!-- endbuild-->
   </head>
   <body>
     <div class="off-canvas-wrapper m-scene" id="wrapper">
@@ -28,10 +30,6 @@
                 </div>
               </div>
               <div class="scene_element scene_element--fadein" id="main-content">
-                <div class="can-explode">
-                  <h3>About</h3>
-                  <p>Flexible web application developer, creative and logical thinker, and passionate techie.  Experience as a freelance developer as well as a quality assurance analyst/developer in a corporate environment.</p><a class="button explode-trigger" id="explore-playground" href="/playground.html">Explore Playground</a>
-                </div>
               </div>
             </div>
             <footer class="row" id="main-footer">
@@ -48,7 +46,19 @@
         </div>
       </div>
     </div>
-    <script src="js/scripts-main.min.js"></script>
-    <script src="js/scripts-about.min.js"></script>
+    <!-- build:js js/scripts-main.min.js-->
+    <script src="../bower_components/jquery/dist/jquery.js"></script>
+    <script src="js/redirect-to-real-domain.js"></script>
+    <script src="js/google-analytics.js"></script>
+    <script src="../bower_components/foundation-sites/dist/foundation.js"></script>
+    <script src="../bower_components/gsap/src/uncompressed/TweenMax.js"></script>
+    <script src="../bower_components/gsap/src/uncompressed/TimelineMax.js"></script>
+    <script src="../bower_components/gsap/src/uncompressed/plugins/CSSPlugin.js"></script>
+    <script src="../bower_components/gsap/src/uncompressed/easing/EasePack.js"></script>
+    <script src="../bower_components/smoothstate/src/jquery.smoothState.js"></script>
+    <script src="js/sticky-footer.js"></script>
+    <script src="js/smoothstate-functions.js"></script>
+    <script src="js/foundation-init.js"></script>
+    <!-- endbuild-->
   </body>
 </html>

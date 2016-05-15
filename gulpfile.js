@@ -1,4 +1,5 @@
 var gulp = require('gulp'),
+  pug = require('gulp-pug'),
   sass = require('gulp-sass'),
   useref = require('gulp-useref'),
   htmlSrc = require('gulp-html-src'),
@@ -14,6 +15,14 @@ var gulp = require('gulp'),
   runSequence = require('run-sequence'),
   debug = require('gulp-debug'),
   sitemap = require('gulp-sitemap');
+
+gulp.task('build-html', function() {
+  return gulp.src('src/*.pug')
+  .pipe(pug({
+    pretty: true
+  }))
+  .pipe(gulp.dest('src'))
+});
 
 gulp.task('sass', function() {
   return gulp.src('src/scss/app.scss')
@@ -121,6 +130,7 @@ gulp.task('clean:deploy-production-front-end-dest', function() {
 
 gulp.task('build-develop', function (callback) {
   runSequence('clean:dist',
+    'build-html',
     'sass',
     ['copy-with-references', 'copy-static-files', 'images', 'fonts'],
     'sitemap',
@@ -130,6 +140,7 @@ gulp.task('build-develop', function (callback) {
 
 gulp.task('build-production', function (callback) {
   runSequence('clean:dist',
+    'build-html',
     'sass',
     ['useref', 'copy-static-files', 'images', 'fonts'],
     'sitemap',
