@@ -1,0 +1,15 @@
+extends ./main-template.pug
+
+block main-content
+  .can-explode
+    h3 About
+    |
+    p
+      | Flexible web application developer, creative and logical thinker, and passionate techie.  Experience as a freelance developer as well as a quality assurance analyst/developer in a corporate environment.
+    |
+    a#explore-playground.button.explode-trigger(href='/playground.html') Explore Playground
+
+block page-scripts
+  // build:js js/scripts-about.min.js
+  script(src='js/explode.js')
+  // endbuild
