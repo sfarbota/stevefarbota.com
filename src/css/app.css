@@ -3244,6 +3244,14 @@ h5 .subheading {
   height: auto;
   min-height: 100%; }
 
+@media screen {
+  #main-content {
+    margin-top: 10px; } }
+
+@media screen and (min-width: 40em) {
+  #main-content {
+    margin-top: 15px; } }
+
 #main-footer {
   height: 85px;
   margin-top: -85px; }
@@ -3253,9 +3261,11 @@ h5 .subheading {
   float: right; }
   @media screen {
     .CrankGears {
+      margin-top: -10px;
       margin-right: -10px; } }
   @media screen and (min-width: 40em) {
     .CrankGears {
+      margin-top: -15px;
       margin-right: -15px; } }
 
 @media screen {

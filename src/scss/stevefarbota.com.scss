@@ -28,6 +28,16 @@ h5 .subheading {
   min-height: 100%;
 }
 
+#main-content {
+  @media #{$small-up} {
+    margin-top: 10px;
+  }
+  
+  @media #{$medium-up} {
+    margin-top: 15px;
+  }
+}
+
 #main-footer {
   height: 85px;
   margin-top: -85px;
@@ -38,10 +48,12 @@ h5 .subheading {
   float: right;
   
   @media #{$small-up} {
+    margin-top: -10px;
     margin-right: -10px;
   }
   
   @media #{$medium-up} {
+    margin-top: -15px;
     margin-right: -15px;
   }
 }
