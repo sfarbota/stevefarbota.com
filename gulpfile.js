@@ -1,27 +1,27 @@
-var gulp = require('gulp'),
-  pug = require('gulp-pug'),
-  sass = require('gulp-sass'),
-  useref = require('gulp-useref'),
-  htmlSrc = require('gulp-html-src'),
+var cache = require('gulp-cache'),
+  cleanCss = require('gulp-clean-css'),
+  debug = require('gulp-debug'),
+  del = require('del'),
   flatten = require('gulp-flatten'),
+  gulp = require('gulp'),
   gulpif = require('gulp-if'),
+  htmlSrc = require('gulp-html-src'),
+  imagemin = require('gulp-imagemin'),
+  pug = require('gulp-pug'),
   rename = require('gulp-rename'),
   replace = require('gulp-replace'),
-  uglify = require('gulp-uglify'),
-  cleanCss = require('gulp-clean-css'),
-  imagemin = require('gulp-imagemin'),
-  cache = require('gulp-cache'),
-  del = require('del'),
   runSequence = require('run-sequence'),
-  debug = require('gulp-debug'),
-  sitemap = require('gulp-sitemap');
+  sass = require('gulp-sass'),
+  sitemap = require('gulp-sitemap'),
+  uglify = require('gulp-uglify'),
+  useref = require('gulp-useref');
 
 gulp.task('build-html', function() {
   return gulp.src('src/*.pug')
-  .pipe(pug({
-    pretty: true
-  }))
-  .pipe(gulp.dest('src'))
+    .pipe(pug({
+      pretty: true
+    }))
+    .pipe(gulp.dest('src'))
 });
 
 gulp.task('sass', function() {
@@ -43,17 +43,17 @@ gulp.task('useref', function() {
 });
 
 gulp.task('copy-css-references', function() {
-	return gulp.src('src/**/*.html')
-		.pipe(htmlSrc({ presets: 'css' }))
-		.pipe(flatten())
-		.pipe(gulp.dest('dist/css'));
+  return gulp.src('src/**/*.html')
+    .pipe(htmlSrc({ presets: 'css' }))
+    .pipe(flatten())
+    .pipe(gulp.dest('dist/css'));
 });
 
 gulp.task('copy-js-references', function() {
-	return gulp.src('src/**/*.html')
-		.pipe(htmlSrc({ presets: 'script'}))
-		.pipe(flatten())
-		.pipe(gulp.dest('dist/js'));
+  return gulp.src('src/**/*.html')
+    .pipe(htmlSrc({ presets: 'script'}))
+    .pipe(flatten())
+    .pipe(gulp.dest('dist/js'));
 });
 
 gulp.task('copy-modified-html-files', function() {
@@ -65,14 +65,16 @@ gulp.task('copy-modified-html-files', function() {
 
 gulp.task('copy-static-files', function (callback) {
   return gulp.src([
-    'src/**/*',
-    '!src/**/*.html',
-    '!src/**/*.css',
-    '!src/**/*.scss',
-    '!src/**/*.sass',
-    '!src/**/*.js',],
-    { nodir: true })
-  .pipe(gulp.dest('dist'));
+      'src/**/*',
+      '!src/**/*.html',
+      '!src/**/*.css',
+      '!src/**/*.scss',
+      '!src/**/*.sass',
+      '!src/**/*.js',
+      '!src/**/*.pug',
+      '!src/robots.txt'],
+      { nodir: true })
+    .pipe(gulp.dest('dist'));
 });
 
 gulp.task('copy-with-references', function(callback) {
@@ -84,23 +86,34 @@ gulp.task('copy-with-references', function(callback) {
 
 gulp.task('images', function(){
   return gulp.src('src/images/**/*.+(png|jpg|jpeg|gif|svg|bmp|ico)')
-  .pipe(cache(imagemin({
-      interlaced: true
-    })))
-  .pipe(gulp.dest('dist/images'));
+    .pipe(cache(imagemin({
+        interlaced: true
+      })))
+    .pipe(gulp.dest('dist/images'));
 });
 
 gulp.task('fonts', function() {
   return gulp.src('src/fonts/**/*')
-  .pipe(gulp.dest('dist/fonts'));
+    .pipe(gulp.dest('dist/fonts'));
 });
- 
+
+gulp.task('copy-robots-txt-develop', function() {
+  return gulp.src('src/robots.txt')
+    .pipe(replace('Allow', 'Disallow'))
+    .pipe(gulp.dest('dist'));
+});
+
+gulp.task('copy-robots-txt-production', function() {
+  return gulp.src('src/robots.txt')
+    .pipe(gulp.dest('dist'));
+});
+
 gulp.task('sitemap', function () {
-    gulp.src('dist/**/*.html')
-        .pipe(sitemap({
-            siteUrl: 'http://www.stevefarbota.com'
-        }))
-        .pipe(gulp.dest('dist'));
+  gulp.src('dist/**/*.html')
+    .pipe(sitemap({
+      siteUrl: 'http://www.stevefarbota.com'
+    }))
+    .pipe(gulp.dest('dist'));
 });
 
 gulp.task('clean', function(callback) {
@@ -132,7 +145,7 @@ gulp.task('build-develop', function (callback) {
   runSequence('clean:dist',
     'build-html',
     'sass',
-    ['copy-with-references', 'copy-static-files', 'images', 'fonts'],
+    ['copy-with-references', 'copy-static-files', 'images', 'fonts', 'copy-robots-txt-develop'],
     'sitemap',
     callback
   );
@@ -142,7 +155,7 @@ gulp.task('build-production', function (callback) {
   runSequence('clean:dist',
     'build-html',
     'sass',
-    ['useref', 'copy-static-files', 'images', 'fonts'],
+    ['useref', 'copy-static-files', 'images', 'fonts', 'copy-robots-txt-production'],
     'sitemap',
     callback
   );
@@ -150,7 +163,7 @@ gulp.task('build-production', function (callback) {
 
 gulp.task('deploy-develop:dist', function (callback) {
   return gulp.src('dist/**/*')
-  .pipe(gulp.dest('/var/www/html/develop.stevefarbota.com/httpdocs'));
+    .pipe(gulp.dest('/var/www/html/develop.stevefarbota.com/httpdocs'));
 });
 
 gulp.task('deploy-develop:front-end', function (callback) {
@@ -163,42 +176,84 @@ gulp.task('deploy-develop:front-end', function (callback) {
 
 gulp.task('deploy-develop:stevefarbota.com.js', function (callback) {
   return gulp.src('stevefarbota.com.js')
-  .pipe(replace('8080', '8181'))
-  .pipe(replace('stevefarbota.com', 'develop.stevefarbota.com'))
-  .pipe(rename({
-    prefix: "develop.",
-  }))
-  .pipe(gulp.dest('/var/www/html/develop.stevefarbota.com'));
+    .pipe(replace('8080', '8181'))
+    .pipe(replace('stevefarbota.com', 'develop.stevefarbota.com'))
+    .pipe(rename({
+      prefix: "develop.",
+    }))
+    .pipe(gulp.dest('/var/www/html/develop.stevefarbota.com'));
 });
 
 gulp.task('deploy-develop:root', function (callback) {
   return gulp.src([
-    '**/*',
-    '!node_modules',
-    '!node_modules/**/*',
-    '!dist',
-    '!dist/**/*',
-    '!src',
-    '!src/**/*',
-    '!bower_components',
-    '!bower_components/**/*',
-    '!bower.json',
-    '!package.json',
-    '!gulpfile.js',
-    '!LICENSE',
-    '!README.md',
-    '!stevefarbota.com.js'])
-  .pipe(gulp.dest('/var/www/html/develop.stevefarbota.com'));
+      '**/*',
+      '!node_modules',
+      '!node_modules/**/*',
+      '!dist',
+      '!dist/**/*',
+      '!src',
+      '!src/**/*',
+      '!bower_components',
+      '!bower_components/**/*',
+      '!bower.json',
+      '!package.json',
+      '!gulpfile.js',
+      '!LICENSE',
+      '!README.md',
+      '!stevefarbota.com.js'])
+    .pipe(gulp.dest('/var/www/html/develop.stevefarbota.com'));
 });
 
-gulp.task('deploy-develop:express', function (callback) {
-  return gulp.src('node_modules/express/**/*')
-  .pipe(gulp.dest('/var/www/html/develop.stevefarbota.com/node_modules/express'));
+gulp.task('deploy-develop:dependencies', function (callback) {
+  return gulp.src([
+      'node_modules/express/**/*',
+      'node_modules/accepts/**/*',
+      'node_modules/mime-types/**/*',
+      'node_modules/mime-db/**/*',
+      'node_modules/negotiator/**/*',
+      'node_modules/array-flatten/**/*',
+      'node_modules/content-disposition/**/*',
+      'node_modules/content-type/**/*',
+      'node_modules/cookie/**/*',
+      'node_modules/cookie-signature/**/*',
+      'node_modules/debug/**/*',
+      'node_modules/ms/**/*',
+      'node_modules/depd/**/*',
+      'node_modules/escape-html/**/*',
+      'node_modules/etag/**/*',
+      'node_modules/finalhandler/**/*',
+      'node_modules/unpipe/**/*',
+      'node_modules/fresh/**/*',
+      'node_modules/merge-descriptors/**/*',
+      'node_modules/methods/**/*',
+      'node_modules/on-finished/**/*',
+      'node_modules/ee-first/**/*',
+      'node_modules/parseurl/**/*',
+      'node_modules/path-to-regexp/**/*',
+      'node_modules/proxy-addr/**/*',
+      'node_modules/forwarded/**/*',
+      'node_modules/ipaddr.js/**/*',
+      'node_modules/qs/**/*',
+      'node_modules/range-parser/**/*',
+      'node_modules/send/**/*',
+      'node_modules/destroy/**/*',
+      'node_modules/http-errors/**/*',
+      'node_modules/inherits/**/*',
+      'node_modules/mime/**/*',
+      'node_modules/statuses/**/*',
+      'node_modules/serve-static/**/*',
+      'node_modules/send/**/*',
+      'node_modules/type-is/**/*',
+      'node_modules/media-typer/**/*',
+      'node_modules/utils-merge/**/*',
+      'node_modules/vary/**/*'],
+      { base: 'node_modules' })
+    .pipe(gulp.dest('/var/www/html/develop.stevefarbota.com/node_modules'));
 });
 
 gulp.task('deploy-develop:back-end', function (callback) {
   runSequence('clean:deploy-develop-back-end-dest',
-    ['deploy-develop:stevefarbota.com.js', 'deploy-develop:root', 'deploy-develop:express'],
+    ['deploy-develop:stevefarbota.com.js', 'deploy-develop:root', 'deploy-develop:dependencies'],
     callback
   );
 });
@@ -211,7 +266,7 @@ gulp.task('deploy-develop', function (callback) {
 
 gulp.task('deploy-production:dist', function (callback) {
   return gulp.src('dist/**/*')
-  .pipe(gulp.dest('/var/www/html/stevefarbota.com/httpdocs'));
+    .pipe(gulp.dest('/var/www/html/stevefarbota.com/httpdocs'));
 });
 
 gulp.task('deploy-production:front-end', function (callback) {
@@ -224,31 +279,73 @@ gulp.task('deploy-production:front-end', function (callback) {
 
 gulp.task('deploy-production:root', function (callback) {
   return gulp.src([
-    '**/*',
-    '!node_modules',
-    '!node_modules/**/*',
-    '!dist',
-    '!dist/**/*',
-    '!src',
-    '!src/**/*',
-    '!bower_components',
-    '!bower_components/**/*',
-    '!bower.json',
-    '!package.json',
-    '!gulpfile.js',
-    '!LICENSE',
-    '!README.md'])
-  .pipe(gulp.dest('/var/www/html/stevefarbota.com'));
+      '**/*',
+      '!node_modules',
+      '!node_modules/**/*',
+      '!dist',
+      '!dist/**/*',
+      '!src',
+      '!src/**/*',
+      '!bower_components',
+      '!bower_components/**/*',
+      '!bower.json',
+      '!package.json',
+      '!gulpfile.js',
+      '!LICENSE',
+      '!README.md'])
+    .pipe(gulp.dest('/var/www/html/stevefarbota.com'));
 });
 
-gulp.task('deploy-production:express', function (callback) {
-  return gulp.src('node_modules/express/**/*')
-  .pipe(gulp.dest('/var/www/html/stevefarbota.com/node_modules/express'));
+gulp.task('deploy-production:dependencies', function (callback) {
+  return gulp.src([
+      'node_modules/express/**/*',
+      'node_modules/accepts/**/*',
+      'node_modules/mime-types/**/*',
+      'node_modules/mime-db/**/*',
+      'node_modules/negotiator/**/*',
+      'node_modules/array-flatten/**/*',
+      'node_modules/content-disposition/**/*',
+      'node_modules/content-type/**/*',
+      'node_modules/cookie/**/*',
+      'node_modules/cookie-signature/**/*',
+      'node_modules/debug/**/*',
+      'node_modules/ms/**/*',
+      'node_modules/depd/**/*',
+      'node_modules/escape-html/**/*',
+      'node_modules/etag/**/*',
+      'node_modules/finalhandler/**/*',
+      'node_modules/unpipe/**/*',
+      'node_modules/fresh/**/*',
+      'node_modules/merge-descriptors/**/*',
+      'node_modules/methods/**/*',
+      'node_modules/on-finished/**/*',
+      'node_modules/ee-first/**/*',
+      'node_modules/parseurl/**/*',
+      'node_modules/path-to-regexp/**/*',
+      'node_modules/proxy-addr/**/*',
+      'node_modules/forwarded/**/*',
+      'node_modules/ipaddr.js/**/*',
+      'node_modules/qs/**/*',
+      'node_modules/range-parser/**/*',
+      'node_modules/send/**/*',
+      'node_modules/destroy/**/*',
+      'node_modules/http-errors/**/*',
+      'node_modules/inherits/**/*',
+      'node_modules/mime/**/*',
+      'node_modules/statuses/**/*',
+      'node_modules/serve-static/**/*',
+      'node_modules/send/**/*',
+      'node_modules/type-is/**/*',
+      'node_modules/media-typer/**/*',
+      'node_modules/utils-merge/**/*',
+      'node_modules/vary/**/*'],
+      { base: 'node_modules' })
+    .pipe(gulp.dest('/var/www/html/stevefarbota.com/node_modules'));
 });
 
 gulp.task('deploy-production:back-end', function (callback) {
   runSequence('clean:deploy-production-back-end-dest',
-    ['deploy-production:root', 'deploy-production:express'],
+    ['deploy-production:root', 'deploy-production:dependencies'],
     callback
   );
 });
